@@ -539,6 +539,11 @@
                 document.getElementById(id).addEventListener('change', applyCustomizations);
             });
         });
+
+        // 立即初始化图表
+        window.onload = function() {
+            initChart();
+        };
     </script>
 </body>
 </html>

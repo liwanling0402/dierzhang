@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第四章数据可视化平台</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .chart-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 15px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        button.active {
+            background: #0056b3;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .chart-container {
+            height: 500px;
+            margin: 20px 0;
+        }
+        
+        .description {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>第四章数据可视化平台</h1>
+        
+        <div class="controls">
+            <div class="chart-buttons">
+                <button class="active" onclick="switchChart('bookPurchase')">图书采购</button>
+                <button onclick="switchChart('exchangeRate')">汇率走势</button>
+                <button onclick="switchChart('productSales')">产品销售</button>
+                <button onclick="switchChart('temperature')">气温变化</button>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="myChart"></canvas>
+        </div>
+        
+        <div class="description">
+            <h3>平台说明</h3>
+            <p>基于第四章内容创建的交互式数据可视化平台，包含：</p>
+            <ul>
+                <li><strong>图书采购分析</strong>：两个地区对不同种类图书的采购情况</li>
+                <li><strong>汇率走势图</strong>：2017年与2019年美元/人民币汇率对比</li>
+                <li><strong>产品销售趋势</strong>：不同产品各季度的销售额统计</li>
+                <li><strong>气温变化</strong>：未来15天最高最低气温走势</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let myChart = null;
+        
+        // 数据集
+        const datasets = {
+            bookPurchase: {
+                labels: ["家庭", "小说", "心理", "科技", "儿童"],
+                data: [
+                    [1200, 2400, 1800, 2200, 1600],
+                    [1050, 2100, 1300, 1600, 1340]
+                ],
+                labelsText: ["地区1", "地区2"],
+                title: "图书采购分析",
+                type: 'bar'
+            },
+            
+            exchangeRate: {
+                labels: ["3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "17", "18", "19", "24", "25", "26", "31"],
+                data: [
+                    [6.8007, 6.8007, 6.8015, 6.8015, 6.8060, 6.8060, 6.8060, 6.8036, 6.8025, 6.7877, 6.7835, 6.7758, 6.7700, 6.7463, 6.7519, 6.7511, 6.7511, 6.7539, 6.7265],
+                    [6.8640, 6.8705, 6.8697, 6.8697, 6.8697, 6.8881, 6.8853, 6.8856, 6.8677, 6.8662, 6.8662, 6.8662, 6.8827, 6.8761, 6.8635, 6.8860, 6.8737, 6.8796, 6.8841]
+                ],
+                labelsText: ["2017年7月", "2019年7月"],
+                title: "汇率走势图",
+                type: 'line'
+            },
+            
+            productSales: {
+                labels: ["第1季度", "第2季度", "第3季度", "第4季度"],
+                data: [
+                    [2144, 4617, 7674, 6666],
+                    [853, 1214, 2414, 4409],
+                    [153, 155, 292, 680]
+                ],
+                labelsText: ["产品A", "产品B", "产品C"],
+                title: "产品销售趋势",
+                type: 'line'
+            },
+            
+            temperature: {
+                labels: ["4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18"],
+                data: [
+                    [32, 33, 34, 34, 33, 31, 30, 29, 30, 29, 26, 23, 21, 25, 31],
+                    [19, 19, 20, 22, 22, 21, 22, 16, 18, 18, 17, 14, 15, 16, 16]
+                ],
+                labelsText: ["最高温度", "最低温度"],
+                title: "气温变化",
+                type: 'line'
+            }
+        };
+        
+        // 切换图表
+        function switchChart(type) {
+            // 更新按钮状态
+            document.querySelectorAll('button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 创建图表
+            createChart(type);
+        }
+        
+        // 创建图表
+        function createChart(type) {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            
+            // 销毁旧图表
+            if (myChart) {
+                myChart.destroy();
+            }
+            
+            const dataset = datasets[type];
+            
+            // 准备数据
+            const chartData = {
+                labels: dataset.labels,
+                datasets: dataset.data.map((data, index) => ({
+                    label: dataset.labelsText[index],
+                    data: data,
+                    backgroundColor: dataset.type === 'bar' ? 
+                        ['#FF6B6B80', '#4ECDC480', '#45B7D180'][index] : 'transparent',
+                    borderColor: ['#FF6B6B', '#4ECDC4', '#45B7D1'][index],
+                    borderWidth: 2,
+                    pointRadius: dataset.type === 'line' ? 5 : 0,
+                    fill: false
+                }))
+            };
+            
+            // 创建新图表
+            myChart = new Chart(ctx, {
+                type: dataset.type,
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: dataset.title,
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 页面加载时初始化
+        window.addEventListener('load', function() {
+            createChart('bookPurchase');
+        });
+    </script>
+</body>
+</html>

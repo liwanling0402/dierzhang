@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第三章数据可视化平台 - 简化版</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.2em;
+        }
+        
+        .chart-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .chart-btn {
+            padding: 12px 24px;
+            border: 2px solid #667eea;
+            border-radius: 25px;
+            background: white;
+            color: #667eea;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .chart-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .chart-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .chart-container {
+            height: 500px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .description {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .description h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .description p {
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 第三章数据可视化平台</h1>
+            <p>基于第三章内容的交互式数据可视化展示</p>
+        </div>
+        
+        <div class="chart-selector">
+            <button class="chart-btn active" onclick="showChart('trigonometry')">三角函数图</button>
+            <button class="chart-btn" onclick="showChart('movie')">电影票房排行</button>
+            <button class="chart-btn" onclick="showChart('quality')">零件质量分布</button>
+            <button class="chart-btn" onclick="showChart('trend')">趋势分析图</button>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="myChart"></canvas>
+        </div>
+        
+        <div class="description">
+            <h3>📈 图表说明</h3>
+            <p id="chartDesc">基于第三章Jupyter笔记本内容创建的交互式数据可视化平台。当前显示三角函数数据可视化。</p>
+            <p><strong>数据来源：</strong>第三章Jupyter笔记本中的真实示例数据</p>
+            <p><strong>交互功能：</strong>点击顶部按钮切换不同图表类型</p>
+        </div>
+    </div>
+
+    <script>
+        let currentChart = null;
+        
+        // 数据集定义
+        const datasets = {
+            trigonometry: {
+                type: 'line',
+                labels: Array.from({length: 100}, (_, i) => (-Math.PI + (2 * Math.PI * i / 99)).toFixed(2)),
+                data: [
+                    Array.from({length: 100}, (_, i) => Math.sin(-Math.PI + (2 * Math.PI * i / 99))),
+                    Array.from({length: 100}, (_, i) => Math.cos(-Math.PI + (2 * Math.PI * i / 99)))
+                ],
+                description: "三角函数数据 - 正弦和余弦函数在[-π, π]区间",
+                seriesLabels: ["正弦函数", "余弦函数"]
+            },
+            
+            movie: {
+                type: 'bar',
+                labels: ["哪吒之魔童降世", "流浪地球", "复仇者联盟4", "疯狂的外星人", "飞驰人生", "烈火英雄"],
+                data: [50.35, 46.86, 42.50, 22.13, 17.16, 13.30],
+                description: "2019年内地电影票房排行榜 - 前六名电影票房统计（单位：亿元）",
+                seriesLabels: ["票房收入"]
+            },
+            
+            quality: {
+                type: 'bar',
+                labels: ["零件A", "零件B", "零件C", "零件D", "零件E", "零件F"],
+                data: [85, 88, 92, 78, 90, 82],
+                description: "零件质量分布数据 - 6种零件质量评分统计",
+                seriesLabels: ["质量评分"]
+            },
+            
+            trend: {
+                type: 'line',
+                labels: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
+                data: [
+                    [4605.2, 4710.3, 5168.9, 4767.2, 4947, 5203, 6047.4, 5945.5, 5219.6, 5038.1, 5196.3, 5698.6],
+                    [4200.1, 4500.5, 4800.8, 5100.2, 5400.7, 5700.9, 6000.3, 6300.6, 6600.1, 6900.4, 7200.8, 7500.2]
+                ],
+                description: "趋势分析数据 - 2018年与2019年月度数据对比",
+                seriesLabels: ["2018年", "2019年"]
+            }
+        };
+        
+        // 显示图表
+        function showChart(type) {
+            // 更新按钮状态
+            document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 销毁现有图表
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
+            const dataset = datasets[type];
+            const ctx = document.getElementById('myChart').getContext('2d');
+            
+            // 创建图表数据
+            let chartData;
+            if (Array.isArray(dataset.data[0])) {
+                // 多系列数据
+                chartData = {
+                    labels: dataset.labels,
+                    datasets: dataset.data.map((data, index) => ({
+                        label: dataset.seriesLabels[index],
+                        data: data,
+                        borderColor: getColor(index),
+                        backgroundColor: getColor(index, 0.2),
+                        borderWidth: 2,
+                        fill: false
+                    }))
+                };
+            } else {
+                // 单系列数据
+                chartData = {
+                    labels: dataset.labels,
+                    datasets: [{
+                        label: dataset.seriesLabels[0],
+                        data: dataset.data,
+                        backgroundColor: Array.from({length: dataset.data.length}, (_, i) => getColor(i, 0.7)),
+                        borderColor: Array.from({length: dataset.data.length}, (_, i) => getColor(i)),
+                        borderWidth: 1
+                    }]
+                };
+            }
+            
+            currentChart = new Chart(ctx, {
+                type: dataset.type,
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: dataset.description,
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '数据类别'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '数值'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 更新描述
+            document.getElementById('chartDesc').textContent = dataset.description;
+        }
+        
+        // 获取颜色
+        function getColor(index, alpha = 1) {
+            const colors = [
+                `rgba(102, 126, 234, ${alpha})`,
+                `rgba(118, 75, 162, ${alpha})`,
+                `rgba(255, 99, 132, ${alpha})`,
+                `rgba(54, 162, 235, ${alpha})`,
+                `rgba(255, 159, 64, ${alpha})`,
+                `rgba(75, 192, 192, ${alpha})`
+            ];
+            return colors[index % colors.length];
+        }
+        
+        // 页面加载时显示默认图表
+        window.onload = function() {
+            showChart('trigonometry');
+        };
+    </script>
+</body>
+</html>

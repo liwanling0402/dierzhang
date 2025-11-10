@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第四章数据可视化平台 - 图表样式与色彩</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            min-height: 100vh;
+            color: #2d3436;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(45deg, #ff7675, #fd79a8, #74b9ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .control-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .chart-type-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .chart-btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #495057;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-btn:hover {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(116, 185, 255, 0.4);
+        }
+        
+        .chart-btn.active {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(116, 185, 255, 0.4);
+        }
+        
+        .style-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .control-group {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 4px solid #74b9ff;
+        }
+        
+        .control-group h3 {
+            margin-bottom: 15px;
+            color: #2d3436;
+            font-size: 1.2em;
+        }
+        
+        .color-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .color-control input {
+            width: 30px;
+            height: 30px;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            min-height: 600px;
+        }
+        
+        .description {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .description h3 {
+            color: #74b9ff;
+            margin-bottom: 20px;
+            font-size: 1.6em;
+            border-bottom: 2px solid #74b9ff;
+            padding-bottom: 10px;
+        }
+        
+        .data-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        
+        .data-section h4 {
+            color: #2d3436;
+            margin-bottom: 15px;
+        }
+        
+        .color-scheme {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .color-sample {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .chart-type-selector {
+                grid-template-columns: 1fr;
+            }
+            
+            .style-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2.2em;
+            }
+            
+            .chart-container {
+                padding: 20px;
+                min-height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 第四章数据可视化平台</h1>
+            <p>基于第四章内容创建的交互式图表样式与色彩平台</p>
+            <p>探索图表样式、颜色使用、线型选择和主题风格的完美结合</p>
+        </div>
+        
+        <div class="control-panel">
+            <div class="chart-type-selector">
+                <button class="chart-btn active" onclick="switchChartType('bookPurchase')">图书采购分析</button>
+                <button class="chart-btn" onclick="switchChartType('exchangeRate')">汇率走势图</button>
+                <button class="chart-btn" onclick="switchChartType('productSales')">产品销售趋势</button>
+                <button class="chart-btn" onclick="switchChartType('temperature')">气温变化</button>
+                <button class="chart-btn" onclick="switchChartType('colorScheme')">色彩方案</button>
+            </div>
+            
+            <div class="style-controls">
+                <div class="control-group">
+                    <h3>📊 图表类型</h3>
+                    <select id="chartType" onchange="updateChartStyle()">
+                        <option value="bar">柱状图</option>
+                        <option value="line">折线图</option>
+                        <option value="scatter">散点图</option>
+                        <option value="pie">饼图</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <h3>🎨 颜色主题</h3>
+                    <select id="colorTheme" onchange="updateChartStyle()">
+                        <option value="matplotlib">Matplotlib 默认</option>
+                        <option value="warm">暖色调</option>
+                        <option value="cool">冷色调</option>
+                        <option value="pastel">柔和色</option>
+                        <option value="bright">鲜艳色</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <h3>📈 线型样式</h3>
+                    <select id="lineStyle" onchange="updateChartStyle()">
+                        <option value="solid">实线</option>
+                        <option value="dashed">虚线</option>
+                        <option value="dotted">点线</option>
+                        <option value="dashdot">点划线</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <h3>⚙️ 图表选项</h3>
+                    <div>
+                        <input type="checkbox" id="showGrid" checked onchange="updateChartStyle()">
+                        <label for="showGrid">显示网格</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="showLegend" checked onchange="updateChartStyle()">
+                        <label for="showLegend">显示图例</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="mainChart"></canvas>
+        </div>
+        
+        <div class="description">
+            <h3>📋 图表说明</h3>
+            <div id="chartDescription">
+                <p>本平台基于第四章内容创建，展示了Matplotlib图表样式与色彩的各种应用：</p>
+                
+                <div class="data-section">
+                    <h4>🎨 颜色使用</h4>
+                    <p>基于第四章4.2节内容，展示了Matplotlib支持的颜色系统：</p>
+                    <div class="color-scheme">
+                        <div class="color-sample" style="background-color: #FFCC00;">#FFCC00</div>
+                        <div class="color-sample" style="background-color: #B0C4DE;">#B0C4DE</div>
+                        <div class="color-sample" style="background-color: #006374;">#006374</div>
+                        <div class="color-sample" style="background-color: #8a2e76;">#8a2e76</div>
+                        <div class="color-sample" style="background-color: #3299CC;">#3299CC</div>
+                    </div>
+                </div>
+                
+                <div class="data-section">
+                    <h4>📈 线型样式</h4>
+                    <p>根据第四章4.3节内容，支持多种线型样式：实线、虚线、点线、点划线等</p>
+                </div>
+                
+                <div class="data-section">
+                    <h4>🔧 交互功能</h4>
+                    <p>• 点击顶部按钮切换不同数据集</p>
+                    <p>• 调整图表类型、颜色主题和线型样式</p>
+                    <p>• 控制网格和图例的显示</p>
+                    <p>• 实时预览图表效果</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentChart = null;
+        
+        // 数据集定义 - 基于第四章真实数据
+        const datasets = {
+            bookPurchase: {
+                type: 'bar',
+                labels: ["家庭", "小说", "心理", "科技", "儿童"],
+                data: [
+                    [1200, 2400, 1800, 2200, 1600], // 地区1
+                    [1050, 2100, 1300, 1600, 1340]  // 地区2
+                ],
+                description: "两个地区对不同种类图书的采购情况 - 基于第四章4.2.3节实例",
+                seriesLabels: ["地区1", "地区2"],
+                colors: ['#FFCC00', '#B0C4DE']
+            },
+            
+            exchangeRate: {
+                type: 'line',
+                labels: ["3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "17", "18", "19", "24", "25", "26", "31"],
+                data: [
+                    [6.8007, 6.8007, 6.8015, 6.8015, 6.8060, 6.8060, 6.8060, 6.8036, 6.8025, 6.7877, 6.7835, 6.7758, 6.7700, 6.7463, 6.7519, 6.7511, 6.7511, 6.7539, 6.7265],
+                    [6.8640, 6.8705, 6.8697, 6.8697, 6.8697, 6.8881, 6.8853, 6.8856, 6.8677, 6.8662, 6.8662, 6.8662, 6.8827, 6.8761, 6.8635, 6.8860, 6.8737, 6.8796, 6.8841]
+                ],
+                description: "2017年7月与2019年7月美元/人民币汇率走势 - 基于第四章4.3.2节实例",
+                seriesLabels: ["2017年7月", "2019年7月"],
+                colors: ['#006374', '#8a2e76']
+            },
+            
+            productSales: {
+                type: 'line',
+                labels: ["第1季度", "第2季度", "第3季度", "第4季度"],
+                data: [
+                    [2144, 4617, 7674, 6666], // 产品A
+                    [853, 1214, 2414, 4409], // 产品B
+                    [153, 155, 292, 680]    // 产品C
+                ],
+                description: "不同产品各季度的销售额统计 - 基于第四章4.4.2节实例",
+                seriesLabels: ["产品A", "产品B", "产品C"],
+                colors: ['#FF6B6B', '#4ECDC4', '#45B7D1']
+            },
+            
+            temperature: {
+                type: 'line',
+                labels: ["4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18"],
+                data: [
+                    [32, 33, 34, 34, 33, 31, 30, 29, 30, 29, 26, 23, 21, 25, 31], // 最高温度
+                    [19, 19, 20, 22, 22, 21, 22, 16, 18, 18, 17, 14, 15, 16, 16]   // 最低温度
+                ],
+                description: "未来15天最高气温和最低气温的走势 - 基于第四章4.5.2节实例",
+                seriesLabels: ["最高温度", "最低温度"],
+                colors: ['#FF5252', '#448AFF']
+            },
+            
+            colorScheme: {
+                type: 'bar',
+                labels: ["红色", "蓝色", "绿色", "黄色", "紫色"],
+                data: [
+                    [85, 92, 78, 90, 82]
+                ],
+                description: "色彩方案展示 - 演示Matplotlib颜色映射表",
+                seriesLabels: ["颜色使用频率"],
+                colors: ['#FF5252', '#448AFF', '#4CAF50', '#FFEB3B', '#9C27B0']
+            }
+        };
+        
+        // 颜色主题定义
+        const colorThemes = {
+            matplotlib: ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd'],
+            warm: ['#FF6B6B', '#FFA726', '#FFD54F', '#FFF176', '#AED581'],
+            cool: ['#448AFF', '#42A5F5', '#29B6F6', '#26C6DA', '#26A69A'],
+            pastel: ['#F8BBD9', '#C5CAE9', '#B3E5FC', '#C8E6C9', '#FFECB3'],
+            bright: ['#FF5252', '#FF4081', '#7C4DFF', '#448AFF', '#18FFFF']
+        };
+        
+        // 线型样式映射
+        const lineStyles = {
+            solid: [],
+            dashed: [5, 5],
+            dotted: [2, 2],
+            dashdot: [5, 5, 1, 5]
+        };
+        
+        // 初始化图表
+        function initChart() {
+            const ctx = document.getElementById('mainChart');
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
+            const dataset = datasets.bookPurchase;
+            const chartType = 'bar';
+            
+            currentChart = new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: dataset.labels,
+                    datasets: dataset.data.map((data, index) => ({
+                        label: dataset.seriesLabels[index],
+                        data: data,
+                        backgroundColor: dataset.colors[index] + '80',
+                        borderColor: dataset.colors[index],
+                        borderWidth: 2
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: dataset.description,
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '图书种类',
+                                font: { size: 12 }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '采购数量(本)',
+                                font: { size: 12 }
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 切换图表类型
+        function switchChartType(type) {
+            document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            updateChart(type);
+        }
+        
+        // 更新图表
+        function updateChart(type = 'bookPurchase') {
+            const dataset = datasets[type];
+            const chartType = document.getElementById('chartType').value;
+            const colorTheme = document.getElementById('colorTheme').value;
+            const lineStyle = document.getElementById('lineStyle').value;
+            const showGrid = document.getElementById('showGrid').checked;
+            const showLegend = document.getElementById('showLegend').checked;
+            
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            const colors = colorThemes[colorTheme];
+            
+            currentChart = new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: dataset.labels,
+                    datasets: dataset.data.map((data, index) => {
+                        const config = {
+                            label: dataset.seriesLabels[index],
+                            data: data,
+                            borderWidth: 2,
+                            pointRadius: chartType === 'line' ? 5 : 0,
+                            pointBackgroundColor: colors[index % colors.length]
+                        };
+                        
+                        if (chartType === 'bar') {
+                            config.backgroundColor = colors[index % colors.length] + '80';
+                            config.borderColor = colors[index % colors.length];
+                        } else if (chartType === 'line') {
+                            config.backgroundColor = 'transparent';
+                            config.borderColor = colors[index % colors.length];
+                            config.borderDash = lineStyles[lineStyle];
+                            config.fill = false;
+                        } else if (chartType === 'scatter') {
+                            config.backgroundColor = colors[index % colors.length];
+                            config.borderColor = colors[index % colors.length];
+                            config.pointRadius = 8;
+                        } else if (chartType === 'pie') {
+                            config.backgroundColor = colors;
+                        }
+                        
+                        return config;
+                    })
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: dataset.description,
+                            font: { size: 18, weight: 'bold' }
+                        },
+                        legend: {
+                            display: showLegend,
+                            position: 'top'
+                        }
+                    },
+                    scales: chartType !== 'pie' ? {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'x轴',
+                                font: { size: 14, weight: 'bold' }
+                            },
+                            grid: {
+                                display: showGrid
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'y轴',
+                                font: { size: 14, weight: 'bold' }
+                            },
+                            grid: {
+                                display: showGrid
+                            }
+                        }
+                    } : {}
+                }
+            });
+        }
+        
+        // 更新图表样式
+        function updateChartStyle() {
+            const activeBtn = document.querySelector('.chart-btn.active');
+            const datasetType = activeBtn.getAttribute('onclick').match(/'([^']+)'/)[1];
+            updateChart(datasetType);
+        }
+        
+        // 页面加载时初始化
+        window.onload = function() {
+            initChart();
+        };
+    </script>
+</body>
+</html>
