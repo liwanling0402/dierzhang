@@ -1,0 +1,19 @@
+# GitHub Pages 配置
+baseurl: "/datavis24"
+url: "https://liwanling0402.github.io"
+title: "数据可视化交互式平台 - 第2、3、4章"
+description: "基于matplotlib的数据可视化项目，集成第2、3、4章内容，包含完整的交互式学习平台"
+
+# 禁用默认的Jekyll处理，因为我们使用的是静态HTML
+safe: true
+include: ["_headers", "_redirects"]
+
+# 排除不需要的文件
+exclude:
+  - README.md
+  - "*.ipynb"
+  - "素材/"
+  - "__MACOSX/"
+  - "*.bat"
+  - ".gitignore"
+  - "_config.yml"

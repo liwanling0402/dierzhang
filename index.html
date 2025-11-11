@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>第4章：图表样式优化交互式平台</title>
+    <title>数据可视化交互式平台 - 第2、3、4章集成</title>
+    <meta name="description" content="基于matplotlib的数据可视化交互式学习平台，集成第2、3、4章内容，包含折线图、柱形图、三角函数、箱形图、散点图等多种图表类型和样式优化技术">
     <style>
         * {
             margin: 0;
@@ -159,23 +160,30 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 第4章：图表样式优化交互式平台</h1>
-            <p>基于matplotlib图表样式优化的完整学习平台，探索数据可视化的艺术之美</p>
+            <h1>📊 数据可视化交互式平台</h1>
+            <p>基于matplotlib的完整学习平台，集成第2、3、4章内容，探索数据可视化的艺术之美</p>
         </div>
         
         <div class="platform-grid">
-            <div class="platform-card" onclick="window.open('chapter4_optimized_interactive_platform.html', '_blank')">
-                <div class="platform-icon">🎨</div>
-                <h3>完整交互式平台</h3>
-                <p>包含所有图表样式优化功能的完整交互平台，支持实时参数调整和主题切换</p>
-                <a href="chapter4_optimized_interactive_platform.html" target="_blank" class="btn">进入平台</a>
+            <div class="platform-card" onclick="openChapter('chapter2_interactive.html')">
+                <div class="platform-icon">📈</div>
+                <h3>第2章：折线图与柱形图</h3>
+                <p>掌握基础图表绘制技术，包括折线图、柱形图及其应用场景</p>
+                <a href="chapter2_interactive.html" target="_blank" class="btn">进入平台</a>
             </div>
             
-            <div class="platform-card" onclick="window.open('https://github.com/liwanling0402/dierzhang', '_blank')">
-                <div class="platform-icon">📁</div>
-                <h3>GitHub仓库</h3>
-                <p>查看源代码、贡献代码或fork项目到自己的仓库进行定制开发</p>
-                <a href="https://github.com/liwanling0402/dierzhang" target="_blank" class="btn">访问仓库</a>
+            <div class="platform-card" onclick="openChapter('chapter3_interactive.html')">
+                <div class="platform-icon">📊</div>
+                <h3>第3章：多种图表类型</h3>
+                <p>学习更多图表类型，包括三角函数、箱形图、散点图等高级可视化</p>
+                <a href="chapter3_interactive.html" target="_blank" class="btn">进入平台</a>
+            </div>
+            
+            <div class="platform-card" onclick="openChapter('chapter4_optimized_interactive_platform.html')">
+                <div class="platform-icon">🎨</div>
+                <h3>第4章：图表样式优化</h3>
+                <p>探索图表样式优化技术，包括颜色、线型、字体、主题等高级功能</p>
+                <a href="chapter4_optimized_interactive_platform.html" target="_blank" class="btn">进入平台</a>
             </div>
         </div>
         
@@ -183,34 +191,24 @@
             <h2>🌟 平台特色功能</h2>
             <div class="feature-grid">
                 <div class="feature-item">
-                    <div class="feature-icon">🎨</div>
-                    <h4>颜色应用</h4>
-                    <p>基础颜色配置、渐变效果、颜色映射表应用</p>
-                </div>
-                <div class="feature-item">
                     <div class="feature-icon">📈</div>
-                    <h4>线型选择</h4>
-                    <p>各种线条样式、标记符号、线宽配置</p>
+                    <h4>第2章核心功能</h4>
+                    <p>基础图表绘制、折线图应用、柱形图对比、气温走势分析</p>
                 </div>
                 <div class="feature-item">
-                    <div class="feature-icon">🔤</div>
-                    <h4>字体设置</h4>
-                    <p>中文字体支持、文本样式、字体大小动态调整</p>
+                    <div class="feature-icon">📊</div>
+                    <h4>第3章核心功能</h4>
+                    <p>多种图表类型、三角函数演示、电影票房分析、交互式控制</p>
                 </div>
                 <div class="feature-item">
-                    <div class="feature-icon">🎭</div>
-                    <h4>主题风格</h4>
-                    <p>多种主题切换、实时预览、风格对比</p>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon">🎯</div>
-                    <h4>区域填充</h4>
-                    <p>曲线间填充、透明度控制、填充效果</p>
+                    <div class="feature-icon">🎨</div>
+                    <h4>第4章核心功能</h4>
+                    <p>颜色应用、线型选择、字体设置、主题风格、区域填充</p>
                 </div>
                 <div class="feature-item">
                     <div class="feature-icon">🚀</div>
-                    <h4>交互体验</h4>
-                    <p>响应式设计、键盘快捷键、深色模式</p>
+                    <h4>统一交互体验</h4>
+                    <p>响应式设计、深色模式、键盘快捷键、实时参数调整</p>
                 </div>
             </div>
         </div>
@@ -218,18 +216,70 @@
         <div class="features">
             <h2>📚 学习内容概览</h2>
             <div style="text-align: center; line-height: 1.8; font-size: 1.1em;">
-                <p>✅ <strong>图书采购情况</strong> - 堆叠柱形图颜色应用</p>
-                <p>✅ <strong>美元/人民币汇率</strong> - 多线型对比分析</p>
-                <p>✅ <strong>产品销售趋势</strong> - 标记符号配置</p>
-                <p>✅ <strong>气温走势图</strong> - 字体标签和填充效果</p>
-                <p>✅ <strong>三角函数区域</strong> - 曲线间填充技术</p>
-                <p>✅ <strong>科赫雪花图案</strong> - 复杂图形样式优化</p>
+                <h3>第2章：基础图表绘制</h3>
+                <p>✅ <strong>折线图基础</strong> - 数据变化趋势可视化</p>
+                <p>✅ <strong>柱形图应用</strong> - 分类数据比较展示</p>
+                <p>✅ <strong>气温走势图</strong> - 双线图实时分析</p>
+                <p>✅ <strong>电影票房排行</strong> - 柱形图数据展示</p>
+                
+                <h3>第3章：多种图表类型</h3>
+                <p>✅ <strong>三角函数图</strong> - 正弦余弦函数展示</p>
+                <p>✅ <strong>箱形图分析</strong> - 数据分布统计</p>
+                <p>✅ <strong>散点分布图</strong> - 多变量关系探索</p>
+                <p>✅ <strong>实时动态图表</strong> - 交互式数据生成</p>
+                
+                <h3>第4章：样式优化技术</h3>
+                <p>✅ <strong>颜色应用</strong> - 渐变效果和映射表</p>
+                <p>✅ <strong>线型选择</strong> - 多线型对比分析</p>
+                <p>✅ <strong>字体设置</strong> - 中文字体和文本样式</p>
+                <p>✅ <strong>区域填充</strong> - 曲线间填充技术</p>
+            </div>
+        </div>
+        
+        <div class="platform-grid">
+            <div class="platform-card" onclick="window.open('https://github.com/liwanling0402/datavis24', '_blank')">
+                <div class="platform-icon">📁</div>
+                <h3>GitHub仓库</h3>
+                <p>查看源代码、贡献代码或fork项目到自己的仓库进行定制开发</p>
+                <a href="https://github.com/liwanling0402/datavis24" target="_blank" class="btn">访问仓库</a>
             </div>
         </div>
     </div>
     
     <div class="footer">
-        <p>© 2024 第4章数据可视化项目 | 作者：李宛凌</p>
+        <p>© 2024 数据可视化项目 | 作者：李宛凌 | 学号：022340611 | 第2、3、4章集成平台</p>
     </div>
+
+    <script>
+        // 处理章节平台打开逻辑
+        function openChapter(url) {
+            // 检查文件是否存在，如果不存在则显示提示
+            fetch(url, { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        window.open(url, '_blank');
+                    } else {
+                        alert('该章节平台文件不存在或无法访问。请确保所有文件已正确上传到GitHub仓库。');
+                    }
+                })
+                .catch(error => {
+                    console.error('文件检查失败:', error);
+                    // 仍然尝试打开，让浏览器处理错误
+                    window.open(url, '_blank');
+                });
+        }
+
+        // 页面加载时检查文件状态
+        document.addEventListener('DOMContentLoaded', function() {
+            const chapterFiles = [
+                'chapter2_interactive.html',
+                'chapter3_interactive.html', 
+                'chapter4_optimized_interactive_platform.html'
+            ];
+            
+            // 可以在这里添加文件状态检查逻辑
+            console.log('数据可视化平台已加载，包含第2、3、4章内容');
+        });
+    </script>
 </body>
 </html>
