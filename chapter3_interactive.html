@@ -176,6 +176,74 @@
             margin-bottom: 15px;
         }
         
+        .loading-indicator {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 2000;
+            text-align: center;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .loading-indicator {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 2000;
+            text-align: center;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
+        
         .theme-toggle {
             position: fixed;
             top: 20px;
@@ -217,6 +285,16 @@
 </head>
 <body>
     <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    
+    <!-- 加载指示器 -->
+    <div class="loading-indicator" id="loadingIndicator">
+        <div>正在加载图表...</div>
+        <div style="margin-top: 10px;">⌛</div>
+    </div>
+    
+    <!-- 消息提示区域 -->
+    <div class="error-message" id="errorMessage"></div>
+    <div class="success-message" id="successMessage"></div>
     
     <div class="container">
         <div class="header">
@@ -399,22 +477,82 @@
         }
 
         function createBoxplotConfig(dataset) {
-            // 箱型图实现 - 使用Chart.js的boxplot类型
-            // 确保Chart.js版本支持boxplot类型，如果不支持，将使用散点图替代
+            // 使用折线图模拟箱型图 - 每个箱型由5条线表示：最小值、Q1、中位数、Q3、最大值
+            const boxplotData = [];
+            const colors = ['#4a90e2', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'];
+            
+            dataset.data.forEach((box, index) => {
+                const [min, q1, median, q3, max] = box;
+                
+                // 为每个零件创建箱型图的各个部分
+                boxplotData.push({
+                    label: `${dataset.labels[index]} - 最小值`,
+                    data: Array(dataset.labels.length).fill(null).map((_, i) => i === index ? min : null),
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    pointRadius: 6,
+                    type: 'scatter'
+                });
+                
+                boxplotData.push({
+                    label: `${dataset.labels[index]} - Q1`,
+                    data: Array(dataset.labels.length).fill(null).map((_, i) => i === index ? q1 : null),
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    pointRadius: 6,
+                    type: 'scatter'
+                });
+                
+                boxplotData.push({
+                    label: `${dataset.labels[index]} - 中位数`,
+                    data: Array(dataset.labels.length).fill(null).map((_, i) => i === index ? median : null),
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: colors[index % colors.length],
+                    borderWidth: 3,
+                    pointRadius: 8,
+                    type: 'scatter'
+                });
+                
+                boxplotData.push({
+                    label: `${dataset.labels[index]} - Q3`,
+                    data: Array(dataset.labels.length).fill(null).map((_, i) => i === index ? q3 : null),
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    pointRadius: 6,
+                    type: 'scatter'
+                });
+                
+                boxplotData.push({
+                    label: `${dataset.labels[index]} - 最大值`,
+                    data: Array(dataset.labels.length).fill(null).map((_, i) => i === index ? max : null),
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    pointRadius: 6,
+                    type: 'scatter'
+                });
+                
+                // 添加箱体（连接Q1和Q3的线段）
+                boxplotData.push({
+                    label: `${dataset.labels[index]} - 箱体`,
+                    data: Array(dataset.labels.length).fill(null).map((_, i) => i === index ? [q1, q3] : null),
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: 'rgba(74, 144, 226, 0.2)',
+                    borderWidth: 2,
+                    type: 'line',
+                    fill: false,
+                    tension: 0
+                });
+            });
+            
             return {
-                type: 'boxplot',
+                type: 'scatter',
                 data: {
                     labels: dataset.labels,
-                    datasets: [{
-                        label: '零件质量分布',
-                        data: dataset.data,
-                        backgroundColor: 'rgba(74, 144, 226, 0.3)',
-                        borderColor: '#1E40AF',
-                        borderWidth: 2,
-                        outlierColor: '#FF6B6B',
-                        padding: 20,
-                        itemRadius: 0
-                    }]
+                    datasets: boxplotData
                 },
                 options: {
                     responsive: true,
@@ -425,11 +563,17 @@
                     plugins: {
                         title: {
                             display: true,
-                            text: '零件质量分布箱型图',
+                            text: '零件质量分布箱型图 (散点图模拟)',
                             font: { size: 16 }
                         },
                         legend: {
-                            display: false
+                            position: 'right',
+                            labels: {
+                                filter: function(item, chart) {
+                                    // 只显示中位数和箱体的图例
+                                    return item.text.includes('中位数') || item.text.includes('箱体');
+                                }
+                            }
                         }
                     },
                     scales: {
@@ -437,6 +581,9 @@
                             title: {
                                 display: true,
                                 text: '零件类型'
+                            },
+                            grid: {
+                                display: false
                             }
                         },
                         y: {
@@ -598,19 +745,6 @@
                         break;
                     case 'boxplot':
                         config = createBoxplotConfig(dataset);
-                        // 如果boxplot类型不支持，回退到条形图
-                        try {
-                            // 测试boxplot类型是否可用
-                            const testChart = new Chart(ctx, config);
-                            testChart.destroy(); // 销毁测试图表
-                        } catch (boxplotError) {
-                            console.warn('Boxplot类型不支持，使用条形图替代:', boxplotError);
-                            config = createMovieConfig({
-                                ...dataset,
-                                type: 'bar',
-                                description: '零件质量分布 - 条形图展示(箱型图不可用)'
-                            });
-                        }
                         break;
                     case 'movie':
                         config = createMovieConfig(dataset);
@@ -650,28 +784,231 @@
             updateChart();
         }
 
-        // 初始化图表
-        window.onload = function() {
-            try {
-                updateChart();
-            } catch (error) {
-                console.error('初始化失败:', error);
-                document.getElementById('chartDescription').textContent = 
-                    '平台初始化失败，请刷新页面重试。错误信息: ' + error.message;
+        // 显示加载指示器
+        function showLoading() {
+            const indicator = document.getElementById('loadingIndicator');
+            if (indicator) {
+                indicator.style.display = 'block';
             }
-        };
+        }
 
-        // 添加错误处理
+        // 隐藏加载指示器
+        function hideLoading() {
+            const indicator = document.getElementById('loadingIndicator');
+            if (indicator) {
+                indicator.style.display = 'none';
+            }
+        }
+
+        // 显示消息
+        function showMessage(message, type = 'error') {
+            const element = document.getElementById(type === 'error' ? 'errorMessage' : 'successMessage');
+            if (element) {
+                element.textContent = message;
+                element.style.display = 'block';
+                
+                // 自动隐藏消息
+                setTimeout(() => {
+                    element.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // 增强的错误处理函数
+        function handleChartError(error, context) {
+            console.error(`图表错误 [${context}]:`, error);
+            
+            // 隐藏加载指示器
+            hideLoading();
+            
+            // 显示错误消息
+            showMessage(`图表加载失败: ${error.message || '未知错误'}`, 'error');
+            
+            // 创建错误信息显示
+            const errorMessage = `图表加载出现问题: ${error.message || '未知错误'}。
+建议操作: 1. 刷新页面 2. 选择其他图表类型 3. 检查网络连接`;
+            
+            // 更新描述显示错误信息
+            document.getElementById('chartDescription').innerHTML = 
+                `<span style="color: #e74c3c;">❌ ${errorMessage}</span>`;
+            
+            // 如果有当前图表，销毁它
+            if (currentChart) {
+                try {
+                    currentChart.destroy();
+                    currentChart = null;
+                } catch (destroyError) {
+                    console.warn('销毁图表时出错:', destroyError);
+                }
+            }
+            
+            // 显示友好的错误指示
+            const ctx = document.getElementById('myChart').getContext('2d');
+            if (ctx) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                ctx.fillStyle = '#f8f9fa';
+                ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                
+                ctx.fillStyle = '#6c757d';
+                ctx.font = '16px Microsoft YaHei';
+                ctx.textAlign = 'center';
+                ctx.fillText('图表加载失败', ctx.canvas.width / 2, ctx.canvas.height / 2 - 20);
+                ctx.font = '14px Microsoft YaHei';
+                ctx.fillText('请尝试选择其他图表类型', ctx.canvas.width / 2, ctx.canvas.height / 2 + 10);
+            }
+        }
+
+        // 图表初始化和重试机制
+        function initializeChartWithRetry(retryCount = 0) {
+            try {
+                // 检查必要的DOM元素是否存在
+                if (!document.getElementById('myChart')) {
+                    throw new Error('图表容器元素未找到');
+                }
+                
+                // 检查Chart.js是否加载完成
+                if (typeof Chart === 'undefined') {
+                    throw new Error('Chart.js库未加载，请检查网络连接');
+                }
+                
+                updateChart();
+                console.log('图表初始化成功');
+                
+            } catch (error) {
+                if (retryCount < 3) {
+                    console.warn(`初始化失败，第${retryCount + 1}次重试...`);
+                    setTimeout(() => {
+                        initializeChartWithRetry(retryCount + 1);
+                    }, 1000 * (retryCount + 1));
+                } else {
+                    handleChartError(error, '初始化');
+                }
+            }
+        }
+
+        // 增强的窗口加载事件处理
+        window.addEventListener('load', function() {
+            console.log('页面加载完成，开始初始化图表...');
+            
+            // 显示加载状态
+            document.getElementById('chartDescription').textContent = '正在加载图表数据...';
+            
+            // 延迟初始化以确保所有资源加载完成
+            setTimeout(() => {
+                initializeChartWithRetry();
+            }, 500);
+        });
+
+        // 增强的全局错误处理
         window.addEventListener('error', function(event) {
             console.error('全局错误:', event.error);
+            // 不阻止错误传播，但记录错误
         });
 
-        // 添加页面可见性检测，确保图表在页面重新可见时正确渲染
+        // 处理未捕获的Promise拒绝
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('未处理的Promise拒绝:', event.reason);
+            event.preventDefault();
+        });
+
+        // 增强的页面可见性检测
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden && currentChart) {
-                currentChart.resize();
+                try {
+                    currentChart.resize();
+                    currentChart.update('none'); // 静默更新避免动画
+                } catch (error) {
+                    console.warn('调整图表大小时出错:', error);
+                }
             }
         });
+
+        // 窗口大小变化时的响应式处理
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (currentChart) {
+                    try {
+                        currentChart.resize();
+                        currentChart.update('none');
+                    } catch (error) {
+                        console.warn('窗口大小变化时调整图表出错:', error);
+                    }
+                }
+            }, 250);
+        });
+
+        // 数据完整性检查
+        function validateDataset(dataset) {
+            if (!dataset || typeof dataset !== 'object') {
+                throw new Error('数据集无效或为空');
+            }
+            
+            if (!dataset.labels || !Array.isArray(dataset.labels)) {
+                throw new Error('数据标签无效');
+            }
+            
+            if (!dataset.data || !Array.isArray(dataset.data)) {
+                throw new Error('数据内容无效');
+            }
+            
+            return true;
+        }
+
+        // 增强的更新图表函数
+        function updateChart() {
+            const type = document.getElementById('datasetSelect').value;
+            const dataset = datasets[type];
+            
+            try {
+                // 验证数据完整性
+                validateDataset(dataset);
+                
+                // 更新描述
+                document.getElementById('chartDescription').textContent = dataset.description;
+                
+                // 销毁旧图表
+                if (currentChart) {
+                    currentChart.destroy();
+                }
+                
+                // 创建新图表
+                const ctx = document.getElementById('myChart').getContext('2d');
+                
+                let config;
+                switch(type) {
+                    case 'trigonometry':
+                        config = createTrigonometryConfig(dataset);
+                        break;
+                    case 'boxplot':
+                        config = createBoxplotConfig(dataset);
+                        break;
+                    case 'movie':
+                        config = createMovieConfig(dataset);
+                        break;
+                    case 'scatter':
+                        config = createScatterConfig(dataset);
+                        break;
+                    case 'trend':
+                        config = createTrendConfig(dataset);
+                        break;
+                    default:
+                        throw new Error('未知的图表类型: ' + type);
+                }
+                
+                // 确保配置有效
+                if (!config || !config.type) {
+                    throw new Error('图表配置无效');
+                }
+                
+                currentChart = new Chart(ctx, config);
+                console.log('图表创建成功:', type);
+                
+            } catch (error) {
+                handleChartError(error, `更新图表 [${type}]`);
+            }
+        }
     </script>
 </body>
 </html>
