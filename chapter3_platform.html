@@ -328,7 +328,7 @@
                     [38, 52, 67, 45, 80, 55, 65, 78, 72, 85, 70, 92]   // 产品E - 完整12个月
                 ],
                 seriesLabels: ['产品A', '产品B', '产品C', '产品D', '产品E'],
-                description: '多产品月销售额雷达图分析。通过雷达图展示不同产品在12个月份的销售表现，便于进行多维度比较和市场趋势分析。',
+                description: '多产品月销售额雷达图分析。通过雷达图展示5个不同产品在12个月份的销售表现。每个产品的数据点代表了该产品在相应月份的销售额（单位：千件），便于进行多维度比较和市场趋势分析。雷达图能够直观展示各产品在不同月份的表现差异和季节性规律。',
                 unit: '千件'
             }
         };
@@ -743,7 +743,19 @@
                                     themeColors.success,
                                     themeColors.warning,
                                     themeColors.info
-                                ][index % 5]
+                                ][index % 5],
+                                pointBorderColor: '#ffffff',
+                                pointHoverBackgroundColor: '#ffffff',
+                                pointHoverBorderColor: [
+                                    themeColors.primary,
+                                    themeColors.secondary,
+                                    themeColors.success,
+                                    themeColors.warning,
+                                    themeColors.info
+                                ][index % 5],
+                                pointHoverBorderWidth: 3,
+                                pointRadius: 4,
+                                pointHoverRadius: 6
                             }))
                         },
                         options: {
@@ -755,17 +767,47 @@
                                     text: dataset.description.split('：')[0],
                                     color: themeColors.text,
                                     font: { size: 16, weight: 'bold' }
+                                },
+                                tooltip: {
+                                    ...baseConfig.plugins.tooltip,
+                                    callbacks: {
+                                        label: function(context) {
+                                            const datasetLabel = context.dataset.label;
+                                            const month = context.label;
+                                            const value = context.parsed.r;
+                                            return `${datasetLabel} - ${month}: ${value} ${dataset.unit}`;
+                                        }
+                                    }
                                 }
                             },
                             scales: {
                                 r: {
-                                    angleLines: { color: themeColors.grid },
-                                    grid: { color: themeColors.grid },
-                                    pointLabels: { color: themeColors.text },
+                                    angleLines: { 
+                                        color: themeColors.grid,
+                                        lineWidth: 1
+                                    },
+                                    grid: { 
+                                        color: themeColors.grid,
+                                        circular: true
+                                    },
+                                    pointLabels: { 
+                                        color: themeColors.text,
+                                        font: { size: 12, weight: 'bold' }
+                                    },
                                     ticks: { 
                                         color: themeColors.text,
-                                        backdropColor: 'transparent'
-                                    }
+                                        backdropColor: 'transparent',
+                                        stepSize: 20,
+                                        maxTicksLimit: 6
+                                    },
+                                    beginAtZero: true,
+                                    suggestedMin: 0,
+                                    suggestedMax: 100
+                                }
+                            },
+                            elements: {
+                                line: {
+                                    tension: 0.2
                                 }
                             }
                         }
@@ -914,6 +956,29 @@
                     <div class="stat-item">
                         <div class="stat-value">${totalValue.toLocaleString()}</div>
                         <div class="stat-label">总值</div>
+                    </div>
+                `;
+            } else if (currentChartType === 'radar') {
+                // 雷达图专用统计信息
+                const products = dataset.seriesLabels;
+                const monthlyData = dataset.data;
+                
+                statsHTML = `
+                    <div class="stat-item">
+                        <div class="stat-value">${products.length}</div>
+                        <div class="stat-label">产品数量</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${dataset.labels.length}</div>
+                        <div class="stat-label">统计维度</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${Math.max(...monthlyData.flat()).toLocaleString()}</div>
+                        <div class="stat-label">最高月销量</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${Math.min(...monthlyData.flat()).toLocaleString()}</div>
+                        <div class="stat-label">最低月销量</div>
                     </div>
                 `;
             }
