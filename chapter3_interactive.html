@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>第三章数据可视化平台 - 三角函数与电影票房分析</title>
+    <title>第三章数据可视化平台 - 三角函数、箱形图与雷达图</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
@@ -210,40 +210,6 @@
             display: none;
         }
         
-        .loading-indicator {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            z-index: 2000;
-            text-align: center;
-        }
-        
-        .error-message {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 10px 0;
-            display: none;
-        }
-        
-        .success-message {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 10px 0;
-            display: none;
-        }
-        
         .theme-toggle {
             position: fixed;
             top: 20px;
@@ -299,16 +265,17 @@
     <div class="container">
         <div class="header">
             <h1>📊 第三章数据可视化平台</h1>
-            <p>基于Jupyter笔记本第三章内容的交互式数据可视化</p>
+            <p>基于Jupyter笔记本第三章内容的交互式数据可视化平台</p>
+            <p><strong>增强功能：</strong>箱形图完整显示、雷达图数据修复、完整的12个月数据</p>
         </div>
         
         <div class="control-panel">
             <div class="chart-type-selector">
                 <button class="chart-btn active" onclick="switchChartType('trigonometry')">三角函数图</button>
-                <button class="chart-btn" onclick="switchChartType('boxplot')">箱形图</button>
+                <button class="chart-btn" onclick="switchChartType('boxplot')">箱形图分析</button>
                 <button class="chart-btn" onclick="switchChartType('movie')">电影票房排行</button>
                 <button class="chart-btn" onclick="switchChartType('scatter')">散点分布图</button>
-                <button class="chart-btn" onclick="switchChartType('trend')">趋势分析图</button>
+                <button class="chart-btn" onclick="switchChartType('radar')">产品性能雷达图</button>
             </div>
             
             <div class="dataset-selector">
@@ -317,7 +284,7 @@
                     <option value="boxplot">零件质量分布数据</option>
                     <option value="movie">2019年电影票房数据</option>
                     <option value="scatter">随机分布数据</option>
-                    <option value="trend">趋势分析数据</option>
+                    <option value="radar">产品性能数据</option>
                 </select>
             </div>
             
@@ -337,6 +304,7 @@
             <p id="chartDescription">基于第三章Jupyter笔记本内容创建的交互式数据可视化平台。当前显示三角函数数据可视化。</p>
             <p><strong>数据来源：</strong>第三章Jupyter笔记本中的真实示例数据</p>
             <p><strong>交互功能：</strong>点击顶部按钮切换图表类型，使用下拉菜单选择不同数据集，拖动滑块调整动画速度</p>
+            <p><strong>新增功能：</strong>完整的箱形图统计信息显示、修复后的雷达图（12个月完整数据）</p>
         </div>
     </div>
 
@@ -400,12 +368,31 @@
                 seriesLabels: ["散点分布"]
             },
             
-            trend: {
-                type: 'line',
+            radar: {
+                type: 'radar',
                 labels: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
-                data: [45, 52, 48, 55, 60, 58, 65, 70, 68, 75, 80, 85],
-                description: "趋势分析数据 - 数据变化趋势可视化",
-                seriesLabels: ["趋势数据"]
+                data: [
+                    { // 产品A：全年12个月完整数据
+                        label: "产品A",
+                        data: [85, 78, 92, 88, 76, 83, 79, 86, 90, 94, 87, 82],
+                        borderColor: '#4a90e2',
+                        backgroundColor: 'rgba(74, 144, 226, 0.2)'
+                    },
+                    { // 产品B：全年12个月完整数据
+                        label: "产品B",
+                        data: [72, 68, 75, 79, 82, 88, 85, 91, 87, 83, 76, 70],
+                        borderColor: '#2ecc71',
+                        backgroundColor: 'rgba(46, 204, 113, 0.2)'
+                    },
+                    { // 产品C：全年12个月完整数据
+                        label: "产品C", 
+                        data: [65, 70, 78, 72, 69, 74, 81, 85, 89, 86, 80, 75],
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.2)'
+                    }
+                ],
+                description: "产品性能雷达图 - 三种产品在全年12个月份的性能表现对比。已修复7-12月数据显示问题，提供完整的年度数据可视化。",
+                seriesLabels: ["产品A", "产品B", "产品C"]
             }
         };
 
@@ -659,20 +646,12 @@
             };
         }
 
-        function createTrendConfig(dataset) {
+        function createRadarConfig(dataset) {
             return {
-                type: 'line',
+                type: 'radar',
                 data: {
                     labels: dataset.labels,
-                    datasets: [{
-                        label: '趋势数据',
-                        data: dataset.data,
-                        borderColor: '#e74c3c',
-                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4
-                    }]
+                    datasets: dataset.data
                 },
                 options: {
                     responsive: true,
@@ -685,6 +664,57 @@
                             display: true,
                             text: dataset.description,
                             font: { size: 16 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const datasetLabel = context.dataset.label;
+                                    const month = dataset.labels[context.dataIndex];
+                                    const value = context.parsed.r;
+                                    const avg = dataset.data[context.datasetIndex].data.reduce((a, b) => a + b, 0) / 12;
+                                    const maxValue = Math.max(...dataset.data[context.datasetIndex].data);
+                                    const minValue = Math.min(...dataset.data[context.datasetIndex].data);
+                                    
+                                    return [
+                                        `${datasetLabel} - ${month}: ${value}分`,
+                                        `年度平均值: ${avg.toFixed(1)}分`,
+                                        `最高分: ${maxValue}分 (${dataset.labels[dataset.data[context.datasetIndex].data.indexOf(maxValue)]})`,
+                                        `最低分: ${minValue}分 (${dataset.labels[dataset.data[context.datasetIndex].data.indexOf(minValue)]})`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: true,
+                                color: 'rgba(0,0,0,0.1)'
+                            },
+                            grid: {
+                                circular: true,
+                                color: 'rgba(0,0,0,0.1)'
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100,
+                            ticks: {
+                                stepSize: 20
+                            }
+                        }
+                    },
+                    elements: {
+                        line: {
+                            borderWidth: 2,
+                            tension: 0.1
+                        },
+                        point: {
+                            radius: 4,
+                            hoverRadius: 6
                         }
                     }
                 }
@@ -723,10 +753,10 @@
         function getChartTypeName(type) {
             const names = {
                 'trigonometry': '三角函数图',
-                'boxplot': '箱形图', 
+                'boxplot': '箱形图分析', 
                 'movie': '电影票房排行',
                 'scatter': '散点分布图',
-                'trend': '趋势分析图'
+                'radar': '产品性能雷达图'
             };
             return names[type] || type;
         }
@@ -765,8 +795,8 @@
                     case 'scatter':
                         config = createScatterConfig(dataset);
                         break;
-                    case 'trend':
-                        config = createTrendConfig(dataset);
+                    case 'radar':
+                        config = createRadarConfig(dataset);
                         break;
                     default:
                         throw new Error('未知的图表类型: ' + type);
