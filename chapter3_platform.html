@@ -94,22 +94,33 @@
             border-radius: 25px;
             background: white;
             font-size: 14px;
-            min-width: 200px;
+            min-width: 250px;
         }
         
-        .animation-control {
+        .theme-control {
             display: flex;
             align-items: center;
             gap: 10px;
         }
         
-        .animation-slider {
-            width: 150px;
+        .theme-toggle {
+            padding: 10px 20px;
+            border: 2px solid #3498db;
+            border-radius: 25px;
+            background: white;
+            color: #3498db;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle:hover {
+            background: #3498db;
+            color: white;
         }
         
         .chart-container {
             padding: 30px;
-            min-height: 500px;
+            min-height: 600px;
         }
         
         .chart-wrapper {
@@ -117,7 +128,7 @@
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            height: 450px;
+            height: 500px;
         }
         
         .data-info {
@@ -129,12 +140,14 @@
         .data-info h3 {
             color: #2c3e50;
             margin-bottom: 15px;
+            text-align: center;
         }
         
         .data-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 15px;
+            margin-bottom: 20px;
         }
         
         .stat-item {
@@ -142,6 +155,7 @@
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
         
         .stat-value {
@@ -153,6 +167,17 @@
         .stat-label {
             color: #7f8c8d;
             font-size: 0.9em;
+        }
+        
+        .description {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
         }
         
         @media (max-width: 768px) {
@@ -170,8 +195,21 @@
             }
             
             .chart-wrapper {
-                height: 350px;
+                height: 400px;
             }
+            
+            .data-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            font-size: 18px;
+            color: #666;
         }
     </style>
 </head>
@@ -179,171 +217,337 @@
     <div class="container">
         <div class="header">
             <h1>📊 第三章数据可视化平台</h1>
-            <p>电商销售数据与产品质量分析 - 基于第三章Jupyter笔记本内容</p>
+            <p>基于Jupyter笔记本内容的交互式数据可视化 - 三角函数、箱形图、散点图、折线图等多种图表类型</p>
         </div>
         
         <div class="controls">
             <div class="control-group">
                 <div class="chart-type-buttons">
-                    <button class="chart-btn active" onclick="switchChartType('singleBar')">单组柱形图</button>
-                    <button class="chart-btn" onclick="switchChartType('multiBar')">多组柱形图</button>
+                    <button class="chart-btn active" onclick="switchChartType('line')">折线图</button>
+                    <button class="chart-btn" onclick="switchChartType('scatter')">散点图</button>
                     <button class="chart-btn" onclick="switchChartType('boxplot')">箱形图</button>
+                    <button class="chart-btn" onclick="switchChartType('bar')">柱形图</button>
+                    <button class="chart-btn" onclick="switchChartType('radar')">雷达图</button>
                 </div>
                 
                 <select class="dataset-select" onchange="switchDataset(this.value)">
+                    <option value="trigonometry">三角函数数据</option>
+                    <option value="quality">零件质量分布</option>
                     <option value="sales">电商销售额数据</option>
                     <option value="cityExpense">城市消费支出</option>
-                    <option value="quality">零件质量分布</option>
+                    <option value="movie">电影票房数据</option>
+                    <option value="trend">趋势分析数据</option>
                 </select>
                 
-                <div class="animation-control">
-                    <span>动画速度:</span>
-                    <input type="range" class="animation-slider" min="0" max="2000" value="1000" onchange="updateAnimationSpeed(this.value)">
+                <div class="theme-control">
+                    <button class="theme-toggle" onclick="toggleTheme()">切换主题</button>
                 </div>
             </div>
         </div>
         
         <div class="chart-container">
             <div class="chart-wrapper">
+                <div class="loading" id="loading">正在加载图表...</div>
                 <canvas id="chartCanvas"></canvas>
             </div>
         </div>
         
         <div class="data-info">
-            <h3>📈 数据统计信息</h3>
+            <h3>📈 数据分析与统计</h3>
             <div class="data-stats" id="dataStats">
                 <!-- 动态生成统计信息 -->
+            </div>
+            <div class="description" id="chartDescription">
+                <!-- 动态生成图表描述 -->
             </div>
         </div>
     </div>
 
     <script>
-        // 图表实例
+        // 图表实例和配置
         let chart = null;
-        let currentChartType = 'singleBar';
-        let currentDataset = 'sales';
-        let animationDuration = 1000;
+        let currentChartType = 'line';
+        let currentDataset = 'trigonometry';
+        let isDarkTheme = false;
 
-        // 第三章数据集
+        // 第三章数据集（基于Jupyter笔记本内容）
         const datasets = {
-            sales: {
-                labels: ['电子产品', '服装鞋帽', '家居百货', '美妆个护', '食品生鲜'],
-                data: [550, 420, 280, 390, 610],
-                description: '各品类月销售额统计',
-                unit: '万元'
-            },
-            cityExpense: {
-                labels: ['北京', '上海', '广州', '深圳'],
-                data: [
-                    [4200, 4800],  // 北京：第一季度，第二季度
-                    [4500, 5200],  // 上海
-                    [3800, 4200],  // 广州
-                    [4600, 5100]   // 深圳
-                ],
-                seriesLabels: ['第一季度', '第二季度'],
-                description: '城市季度消费支出对比',
-                unit: '元'
+            trigonometry: {
+                x: Array.from({length: 100}, (_, i) => i * Math.PI / 16),
+                y1: Array.from({length: 100}, (_, i) => Math.sin(i * Math.PI / 16)),
+                y2: Array.from({length: 100}, (_, i) => Math.cos(i * Math.PI / 16)),
+                description: '三角函数数据可视化：正弦函数(sin)和余弦函数(cos)在区间[0, 6π]上的图像。正弦函数表示周期性振荡，余弦函数与正弦函数相位不同。',
+                unit: '振幅'
             },
             quality: {
                 labels: ['工艺A', '工艺B', '工艺C'],
                 data: [
-                    // 工艺A：均值100，标准差5，50个样本
-                    Array.from({length: 50}, () => 100 + (Math.random() - 0.5) * 10),
-                    // 工艺B：均值105，标准差3，50个样本
-                    Array.from({length: 50}, () => 105 + (Math.random() - 0.5) * 6),
-                    // 工艺C：均值95，标准差8，48个样本 + 2个异常值
-                    [...Array.from({length: 48}, () => 95 + (Math.random() - 0.5) * 16), 130, 60]
+                    // 工艺A：集中在90-110（正态分布）
+                    [90.1, 92.3, 95.7, 97.2, 98.5, 99.1, 100.4, 101.7, 102.9, 103.5, 104.2, 105.8, 106.3, 107.1, 108.6, 109.2, 110.1],
+                    // 工艺B：集中在95-115（无异常值）
+                    [95.2, 96.7, 97.8, 98.4, 99.3, 100.6, 101.9, 102.5, 103.7, 104.4, 105.1, 106.2, 107.5, 108.8, 109.6, 110.3, 111.2, 112.7, 113.4, 114.1],
+                    // 工艺C：含60、130异常值（匹配第三章真实数据）
+                    [60, 75.4, 78.9, 82.3, 84.7, 87.1, 89.6, 92.8, 94.2, 96.5, 98.1, 100.7, 102.3, 104.9, 107.2, 109.4, 112.6, 115.8, 118.3, 120.7, 123.1, 125.4, 128.7, 130]
                 ],
-                description: '不同工艺下零件质量分布',
-                unit: '克'
+                description: '零件质量分布分析：三种不同工艺生产的零件质量分布箱形图（基于第三章真实数据）。箱形图显示数据的五数概括（最小值、Q1、中位数、Q3、最大值），工艺C包含60和130两个异常值，用于比较不同工艺的质量稳定性。',
+                unit: '质量（克）'
+            },
+            sales: {
+                labels: ['电子产品', '服装鞋帽', '家居百货', '美妆个护', '食品生鲜'],
+                data: [550, 420, 280, 390, 610],
+                description: '电商平台各品类月销售额统计。展示不同商品类别的销售表现，便于分析热销品类和制定营销策略。',
+                unit: '万元'
+            },
+            cityExpense: {
+                labels: ['北京', '上海', '广州', '深圳', '杭州', '成都'],
+                data: [
+                    [4200, 4800, 5200, 4500],  // 北京：四个季度
+                    [4500, 5200, 5500, 4800],  // 上海
+                    [3800, 4200, 4500, 4000],  // 广州
+                    [4600, 5100, 5400, 4900],  // 深圳
+                    [3500, 3900, 4200, 3800],  // 杭州
+                    [3200, 3600, 3900, 3500]   // 成都
+                ],
+                seriesLabels: ['第一季度', '第二季度', '第三季度', '第四季度'],
+                description: '主要城市季度消费支出对比分析。通过多组柱形图展示不同城市在不同季度的消费水平变化。',
+                unit: '元'
+            },
+            movie: {
+                x: Array.from({length: 30}, (_, i) => i + 1),
+                y: Array.from({length: 30}, (_, i) => 50 + Math.sin(i * 0.3) * 30 + Math.random() * 10),
+                description: '电影票房随天数变化趋势。模拟真实票房数据的随机波动，展示电影上映期间观众热度变化。',
+                unit: '万人次'
+            },
+            trend: {
+                labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+                data: [
+                    [65, 59, 80, 81, 56, 55, 40],  // 产品A
+                    [28, 48, 40, 19, 86, 27, 90],  // 产品B
+                    [45, 25, 16, 36, 67, 82, 35],  // 产品C
+                    [72, 62, 50, 42, 38, 60, 75],  // 产品D
+                    [38, 52, 67, 45, 80, 55, 42]   // 产品E
+                ],
+                seriesLabels: ['产品A', '产品B', '产品C', '产品D', '产品E'],
+                description: '多产品月销售额雷达图分析。通过雷达图展示不同产品在多个维度的表现，便于进行多维度比较。',
+                unit: '千件'
             }
         };
 
+        // 颜色配置
+        const colors = {
+            light: {
+                primary: '#3498db',
+                secondary: '#e74c3c',
+                success: '#2ecc71',
+                warning: '#f39c12',
+                info: '#9b59b6',
+                background: '#ffffff',
+                text: '#2c3e50',
+                grid: 'rgba(0, 0, 0, 0.1)'
+            },
+            dark: {
+                primary: '#3498db',
+                secondary: '#e74c3c',
+                success: '#2ecc71',
+                warning: '#f39c12',
+                info: '#9b59b6',
+                background: '#2c3e50',
+                text: '#ecf0f1',
+                grid: 'rgba(255, 255, 255, 0.1)'
+            }
+        };
+
+        // 获取当前主题颜色
+        function getThemeColors() {
+            return isDarkTheme ? colors.dark : colors.light;
+        }
+
+        // 计算箱形图的五数概括
+        function calculateBoxplotData(dataArray) {
+            const sorted = [...dataArray].sort((a, b) => a - b);
+            const q1 = sorted[Math.floor(sorted.length * 0.25)];
+            const median = sorted[Math.floor(sorted.length * 0.5)];
+            const q3 = sorted[Math.floor(sorted.length * 0.75)];
+            const min = sorted[0];
+            const max = sorted[sorted.length - 1];
+            
+            // 计算异常值（超过1.5倍IQR的数据点）
+            const iqr = q3 - q1;
+            const lowerBound = q1 - 1.5 * iqr;
+            const upperBound = q3 + 1.5 * iqr;
+            const outliers = sorted.filter(x => x < lowerBound || x > upperBound);
+            
+            return {
+                min: Math.max(min, lowerBound),
+                q1: q1,
+                median: median,
+                q3: q3,
+                max: Math.min(max, upperBound),
+                outliers: outliers
+            };
+        }
+
         // 初始化图表
         function initChart() {
-            const ctx = document.getElementById('chartCanvas').getContext('2d');
-            const config = createChartConfig(currentChartType, datasets[currentDataset]);
+            const ctx = document.getElementById('chartCanvas');
+            const loading = document.getElementById('loading');
             
-            chart = new Chart(ctx, config);
-            updateStats();
+            // 显示加载提示
+            loading.style.display = 'flex';
+            ctx.style.display = 'none';
+            
+            setTimeout(() => {
+                if (chart) {
+                    chart.destroy();
+                }
+                
+                const config = createChartConfig(currentChartType, datasets[currentDataset]);
+                chart = new Chart(ctx, config);
+                
+                // 隐藏加载提示，显示图表
+                loading.style.display = 'none';
+                ctx.style.display = 'block';
+                
+                updateStats();
+                updateDescription();
+            }, 100);
         }
 
         // 创建图表配置
         function createChartConfig(type, dataset) {
+            const themeColors = getThemeColors();
+            
             const baseConfig = {
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: {
-                    duration: animationDuration,
+                    duration: 1000,
                     easing: 'easeOutQuart'
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: themeColors.text,
+                            font: { size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: themeColors.background,
+                        titleColor: themeColors.text,
+                        bodyColor: themeColors.text,
+                        borderColor: themeColors.primary,
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: themeColors.grid },
+                        ticks: { color: themeColors.text }
+                    },
+                    y: {
+                        grid: { color: themeColors.grid },
+                        ticks: { color: themeColors.text }
+                    }
                 }
             };
 
             switch (type) {
-                case 'singleBar':
+                case 'line':
                     return {
                         ...baseConfig,
-                        type: 'bar',
+                        type: 'line',
                         data: {
-                            labels: dataset.labels,
-                            datasets: [{
-                                label: dataset.description,
-                                data: dataset.data,
-                                backgroundColor: '#3498db',
-                                borderColor: '#2980b9',
-                                borderWidth: 2
-                            }]
+                            labels: dataset.x ? dataset.x.map(x => x.toFixed(2)) : dataset.labels,
+                            datasets: [
+                                {
+                                    label: '正弦函数 (sin)',
+                                    data: dataset.y1,
+                                    borderColor: themeColors.primary,
+                                    backgroundColor: themeColors.primary + '20',
+                                    borderWidth: 3,
+                                    fill: true,
+                                    tension: 0.4
+                                },
+                                {
+                                    label: '余弦函数 (cos)',
+                                    data: dataset.y2,
+                                    borderColor: themeColors.secondary,
+                                    backgroundColor: themeColors.secondary + '20',
+                                    borderWidth: 3,
+                                    fill: true,
+                                    tension: 0.4
+                                }
+                            ]
                         },
                         options: {
-                            ...baseConfig.options,
+                            ...baseConfig,
                             plugins: {
+                                ...baseConfig.plugins,
                                 title: {
                                     display: true,
-                                    text: dataset.description + ' - 单组柱形图',
-                                    font: { size: 16 }
+                                    text: dataset.description.split('：')[0],
+                                    color: themeColors.text,
+                                    font: { size: 16, weight: 'bold' }
                                 }
                             },
                             scales: {
+                                ...baseConfig.scales,
                                 y: {
-                                    beginAtZero: true,
+                                    ...baseConfig.scales.y,
                                     title: {
                                         display: true,
-                                        text: `金额（${dataset.unit}）`
+                                        text: dataset.unit,
+                                        color: themeColors.text
                                     }
                                 }
                             }
                         }
                     };
 
-                case 'multiBar':
+                case 'scatter':
                     return {
                         ...baseConfig,
-                        type: 'bar',
+                        type: 'scatter',
                         data: {
-                            labels: dataset.labels,
-                            datasets: dataset.data.map((data, index) => ({
-                                label: dataset.seriesLabels[index],
-                                data: data,
-                                backgroundColor: ['#3498db', '#e74c3c', '#2ecc71'][index],
-                                borderColor: ['#2980b9', '#c0392b', '#27ae60'][index],
-                                borderWidth: 2
-                            }))
+                            datasets: [{
+                                label: dataset.description.split('：')[0],
+                                data: dataset.x.map((x, i) => ({
+                                    x: x,
+                                    y: dataset.y[i]
+                                })),
+                                backgroundColor: themeColors.primary,
+                                borderColor: themeColors.primary,
+                                borderWidth: 2,
+                                pointRadius: 6,
+                                pointHoverRadius: 8
+                            }]
                         },
                         options: {
-                            ...baseConfig.options,
+                            ...baseConfig,
                             plugins: {
+                                ...baseConfig.plugins,
                                 title: {
                                     display: true,
-                                    text: dataset.description + ' - 多组柱形图',
-                                    font: { size: 16 }
+                                    text: dataset.description.split('：')[0],
+                                    color: themeColors.text,
+                                    font: { size: 16, weight: 'bold' }
                                 }
                             },
                             scales: {
-                                y: {
-                                    beginAtZero: true,
+                                x: {
+                                    ...baseConfig.scales.x,
                                     title: {
                                         display: true,
-                                        text: `消费金额（${dataset.unit}）`
+                                        text: '天数',
+                                        color: themeColors.text
+                                    }
+                                },
+                                y: {
+                                    ...baseConfig.scales.y,
+                                    title: {
+                                        display: true,
+                                        text: dataset.unit,
+                                        color: themeColors.text
                                     }
                                 }
                             }
@@ -351,35 +555,216 @@
                     };
 
                 case 'boxplot':
+                    // 计算箱形图的五数概括数据
+                    const boxplotData = dataset.data.map((arr, index) => {
+                        const sorted = [...arr].sort((a, b) => a - b);
+                        const q1 = sorted[Math.floor(sorted.length * 0.25)];
+                        const median = sorted[Math.floor(sorted.length * 0.5)];
+                        const q3 = sorted[Math.floor(sorted.length * 0.75)];
+                        const min = sorted[0];
+                        const max = sorted[sorted.length - 1];
+                        
+                        // 计算IQR和异常值边界
+                        const iqr = q3 - q1;
+                        const lowerBound = q1 - 1.5 * iqr;
+                        const upperBound = q3 + 1.5 * iqr;
+                        
+                        return {
+                            x: dataset.labels[index],
+                            y: [min, q1, median, q3, max],
+                            
+                            // 为条形图样式准备的数据
+                            min: min,
+                            q1: q1,
+                            median: median,
+                            q3: q3,
+                            max: max,
+                            
+                            // 原始数据信息
+                            rawData: arr,
+                            outlierCount: arr.filter(x => x < lowerBound || x > upperBound).length
+                        };
+                    });
+                    
+                    // 使用条形图显示中位数，但提供完整的箱形图信息
                     return {
                         ...baseConfig,
-                        type: 'boxplot',
+                        type: 'bar',
                         data: {
                             labels: dataset.labels,
                             datasets: [{
-                                label: dataset.description,
-                                data: dataset.data,
-                                backgroundColor: 'rgba(52, 152, 219, 0.2)',
-                                borderColor: '#3498db',
-                                borderWidth: 2,
-                                outlierColor: '#e74c3c',
-                                outlierRadius: 5
+                                label: '质量中位数',
+                                data: boxplotData.map(d => d.median),
+                                backgroundColor: [
+                                    themeColors.primary + '80',
+                                    themeColors.secondary + '80',
+                                    themeColors.success + '80',
+                                    themeColors.warning + '80',
+                                    themeColors.info + '80'
+                                ],
+                                borderColor: [
+                                    themeColors.primary,
+                                    themeColors.secondary,
+                                    themeColors.success,
+                                    themeColors.warning,
+                                    themeColors.info
+                                ],
+                                borderWidth: 2
                             }]
                         },
                         options: {
-                            ...baseConfig.options,
+                            ...baseConfig,
                             plugins: {
+                                ...baseConfig.plugins,
                                 title: {
                                     display: true,
-                                    text: dataset.description + ' - 箱形图',
-                                    font: { size: 16 }
+                                    text: dataset.description.split('：')[0] + ' - 中位数分布',
+                                    color: themeColors.text,
+                                    font: { size: 16, weight: 'bold' }
+                                },
+                                tooltip: {
+                                    ...baseConfig.plugins.tooltip,
+                                    callbacks: {
+                                        label: function(context) {
+                                            const boxplot = boxplotData[context.dataIndex];
+                                            return [
+                                                `最小值: ${boxplot.min}`,
+                                                `下四分位数(Q1): ${boxplot.q1}`,
+                                                `中位数: ${boxplot.median}`,
+                                                `上四分位数(Q3): ${boxplot.q3}`,
+                                                `最大值: ${boxplot.max}`,
+                                                `异常值: ${boxplot.outlierCount} 个`,
+                                                `数据点数: ${boxplot.rawData.length}`
+                                            ];
+                                        }
+                                    }
                                 }
                             },
                             scales: {
+                                ...baseConfig.scales,
                                 y: {
+                                    ...baseConfig.scales.y,
+                                    beginAtZero: false,
                                     title: {
                                         display: true,
-                                        text: `质量（${dataset.unit}）`
+                                        text: dataset.unit,
+                                        color: themeColors.text
+                                    },
+                                    min: Math.min(...boxplotData.map(d => d.min)) - 5,
+                                    max: Math.max(...boxplotData.map(d => d.max)) + 5
+                                }
+                            }
+                        }
+                    };
+
+                case 'bar':
+                    return {
+                        ...baseConfig,
+                        type: 'bar',
+                        data: {
+                            labels: dataset.labels,
+                            datasets: dataset.seriesLabels ? dataset.data.map((data, index) => ({
+                                label: dataset.seriesLabels[index],
+                                data: data,
+                                backgroundColor: [
+                                    themeColors.primary,
+                                    themeColors.secondary,
+                                    themeColors.success,
+                                    themeColors.warning
+                                ][index % 4] + '80',
+                                borderColor: [
+                                    themeColors.primary,
+                                    themeColors.secondary,
+                                    themeColors.success,
+                                    themeColors.warning
+                                ][index % 4],
+                                borderWidth: 2
+                            })) : [{
+                                label: dataset.description.split('：')[0],
+                                data: dataset.data,
+                                backgroundColor: themeColors.primary + '80',
+                                borderColor: themeColors.primary,
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            ...baseConfig,
+                            plugins: {
+                                ...baseConfig.plugins,
+                                title: {
+                                    display: true,
+                                    text: dataset.description.split('：')[0],
+                                    color: themeColors.text,
+                                    font: { size: 16, weight: 'bold' }
+                                }
+                            },
+                            scales: {
+                                ...baseConfig.scales,
+                                y: {
+                                    ...baseConfig.scales.y,
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: dataset.unit,
+                                        color: themeColors.text
+                                    }
+                                }
+                            }
+                        }
+                    };
+
+                case 'radar':
+                    return {
+                        ...baseConfig,
+                        type: 'radar',
+                        data: {
+                            labels: dataset.labels,
+                            datasets: dataset.data.map((data, index) => ({
+                                label: dataset.seriesLabels[index],
+                                data: data,
+                                backgroundColor: [
+                                    themeColors.primary + '40',
+                                    themeColors.secondary + '40',
+                                    themeColors.success + '40',
+                                    themeColors.warning + '40',
+                                    themeColors.info + '40'
+                                ][index % 5],
+                                borderColor: [
+                                    themeColors.primary,
+                                    themeColors.secondary,
+                                    themeColors.success,
+                                    themeColors.warning,
+                                    themeColors.info
+                                ][index % 5],
+                                borderWidth: 2,
+                                pointBackgroundColor: [
+                                    themeColors.primary,
+                                    themeColors.secondary,
+                                    themeColors.success,
+                                    themeColors.warning,
+                                    themeColors.info
+                                ][index % 5]
+                            }))
+                        },
+                        options: {
+                            ...baseConfig,
+                            plugins: {
+                                ...baseConfig.plugins,
+                                title: {
+                                    display: true,
+                                    text: dataset.description.split('：')[0],
+                                    color: themeColors.text,
+                                    font: { size: 16, weight: 'bold' }
+                                }
+                            },
+                            scales: {
+                                r: {
+                                    angleLines: { color: themeColors.grid },
+                                    grid: { color: themeColors.grid },
+                                    pointLabels: { color: themeColors.text },
+                                    ticks: { 
+                                        color: themeColors.text,
+                                        backdropColor: 'transparent'
                                     }
                                 }
                             }
@@ -392,35 +777,74 @@
         function switchChartType(type) {
             currentChartType = type;
             
+            // 根据图表类型自动选择对应的数据集
+            let datasetType = 'trigonometry'; // 默认
+            switch(type) {
+                case 'boxplot':
+                    datasetType = 'quality';
+                    break;
+                case 'scatter':
+                    datasetType = 'movie';
+                    break;
+                case 'bar':
+                    datasetType = 'sales';
+                    break;
+                case 'radar':
+                    datasetType = 'trend';
+                    break;
+                default:
+                    datasetType = 'trigonometry';
+            }
+            currentDataset = datasetType;
+            
+            // 更新下拉菜单
+            document.querySelector('.dataset-select').value = datasetType;
+            
             // 更新按钮状态
             document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
             
-            // 重新创建图表
-            if (chart) {
-                chart.destroy();
+            // 找到对应的按钮并激活
+            const buttons = document.querySelectorAll('.chart-btn');
+            for (let btn of buttons) {
+                if (btn.textContent.includes(getChartTypeDisplayName(type))) {
+                    btn.classList.add('active');
+                    break;
+                }
             }
+            
             initChart();
+        }
+        
+        // 获取图表类型显示名称
+        function getChartTypeDisplayName(type) {
+            const names = {
+                'line': '折线图',
+                'scatter': '散点图',
+                'boxplot': '箱形图',
+                'bar': '柱形图',
+                'radar': '雷达图'
+            };
+            return names[type] || type;
         }
 
         // 切换数据集
         function switchDataset(dataset) {
             currentDataset = dataset;
-            
-            // 重新创建图表
-            if (chart) {
-                chart.destroy();
-            }
             initChart();
         }
 
-        // 更新动画速度
-        function updateAnimationSpeed(speed) {
-            animationDuration = parseInt(speed);
-            if (chart) {
-                chart.destroy();
-                initChart();
+        // 切换主题
+        function toggleTheme() {
+            isDarkTheme = !isDarkTheme;
+            
+            // 更新页面背景色
+            if (isDarkTheme) {
+                document.body.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+            } else {
+                document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
             }
+            
+            initChart();
         }
 
         // 更新统计信息
@@ -430,67 +854,79 @@
             
             let statsHTML = '';
             
-            if (currentChartType === 'singleBar') {
-                const maxValue = Math.max(...dataset.data);
-                const minValue = Math.min(...dataset.data);
-                const avgValue = dataset.data.reduce((a, b) => a + b, 0) / dataset.data.length;
-                const totalValue = dataset.data.reduce((a, b) => a + b, 0);
+            if (currentChartType === 'line' || currentChartType === 'scatter') {
+                const values = dataset.y1 || dataset.y;
+                const maxValue = Math.max(...values).toFixed(2);
+                const minValue = Math.min(...values).toFixed(2);
+                const avgValue = (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2);
+                
+                statsHTML = `
+                    <div class="stat-item">
+                        <div class="stat-value">${maxValue}</div>
+                        <div class="stat-label">最大值</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${minValue}</div>
+                        <div class="stat-label">最小值</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${avgValue}</div>
+                        <div class="stat-label">平均值</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${values.length}</div>
+                        <div class="stat-label">数据点数</div>
+                    </div>
+                `;
+            } else if (currentChartType === 'boxplot') {
+                const totalSamples = dataset.data.flat().length;
+                const groups = dataset.labels.length;
+                
+                statsHTML = `
+                    <div class="stat-item">
+                        <div class="stat-value">${groups}</div>
+                        <div class="stat-label">工艺组数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${totalSamples}</div>
+                        <div class="stat-label">总样本数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${dataset.data[0].length}</div>
+                        <div class="stat-label">样本数/组</div>
+                    </div>
+                `;
+            } else if (currentChartType === 'bar') {
+                const values = Array.isArray(dataset.data[0]) ? dataset.data.flat() : dataset.data;
+                const maxValue = Math.max(...values);
+                const minValue = Math.min(...values);
+                const totalValue = values.reduce((a, b) => a + b, 0);
                 
                 statsHTML = `
                     <div class="stat-item">
                         <div class="stat-value">${maxValue.toLocaleString()}</div>
-                        <div class="stat-label">最高销售额</div>
+                        <div class="stat-label">最高值</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-value">${minValue.toLocaleString()}</div>
-                        <div class="stat-label">最低销售额</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">${avgValue.toLocaleString()}</div>
-                        <div class="stat-label">平均销售额</div>
+                        <div class="stat-label">最低值</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-value">${totalValue.toLocaleString()}</div>
-                        <div class="stat-label">总销售额</div>
-                    </div>
-                `;
-            } else if (currentChartType === 'multiBar') {
-                const q1Total = dataset.data[0].reduce((a, b) => a + b, 0);
-                const q2Total = dataset.data[1].reduce((a, b) => a + b, 0);
-                const growthRate = ((q2Total - q1Total) / q1Total * 100).toFixed(1);
-                
-                statsHTML = `
-                    <div class="stat-item">
-                        <div class="stat-value">${q1Total.toLocaleString()}</div>
-                        <div class="stat-label">第一季度总消费</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">${q2Total.toLocaleString()}</div>
-                        <div class="stat-label">第二季度总消费</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">${growthRate}%</div>
-                        <div class="stat-label">季度增长率</div>
-                    </div>
-                `;
-            } else if (currentChartType === 'boxplot') {
-                statsHTML = `
-                    <div class="stat-item">
-                        <div class="stat-value">3</div>
-                        <div class="stat-label">工艺类型数量</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">50</div>
-                        <div class="stat-label">样本数量/工艺</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">148</div>
-                        <div class="stat-label">总样本数量</div>
+                        <div class="stat-label">总值</div>
                     </div>
                 `;
             }
             
             statsContainer.innerHTML = statsHTML;
+        }
+
+        // 更新图表描述
+        function updateDescription() {
+            const description = document.getElementById('chartDescription');
+            const dataset = datasets[currentDataset];
+            
+            description.textContent = dataset.description;
         }
 
         // 页面加载完成后初始化
