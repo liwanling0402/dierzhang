@@ -401,20 +401,15 @@
         }
 
         function createBoxplotConfig(dataset) {
-            // 清空Chart.js容器，准备使用D3.js
-            const ctx = document.getElementById('myChart');
-            ctx.innerHTML = '';
+            // 清空图表容器
+            const chartContainer = document.getElementById('myChart');
+            chartContainer.innerHTML = '<div id="d3-container" style="width: 100%; height: 100%;"></div>';
             
-            // 设置图表尺寸
-            const width = ctx.clientWidth;
-            const height = ctx.clientHeight;
-            const margin = {top: 40, right: 30, bottom: 60, left: 60};
-            
-            // 创建SVG
-            const svg = d3.select(ctx)
-                .append('svg')
-                .attr('width', width)
-                .attr('height', height);
+            // 获取容器尺寸
+            const container = document.getElementById('d3-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const margin = {top: 50, right: 30, bottom: 60, left: 60};
             
             // 创建数据
             const boxplotData = dataset.data.map((item, index) => ({
@@ -426,111 +421,145 @@
                 max: item[4]
             }));
             
-            // 创建比例尺
-            const xScale = d3.scaleBand()
-                .domain(dataset.labels)
-                .range([margin.left, width - margin.right])
-                .padding(0.4);
+            // 使用D3.js创建箱型图
+            setTimeout(() => {
+                try {
+                    // 创建SVG
+                    const svg = d3.select('#d3-container')
+                        .append('svg')
+                        .attr('width', width)
+                        .attr('height', height);
+                    
+                    // 创建比例尺
+                    const xScale = d3.scaleBand()
+                        .domain(dataset.labels)
+                        .range([margin.left, width - margin.right])
+                        .padding(0.4);
+                    
+                    const yScale = d3.scaleLinear()
+                        .domain([70, 100])
+                        .range([height - margin.bottom, margin.top]);
+                    
+                    // 添加坐标轴
+                    const xAxis = d3.axisBottom(xScale);
+                    const yAxis = d3.axisLeft(yScale);
+                    
+                    svg.append('g')
+                        .attr('transform', `translate(0, ${height - margin.bottom})`)
+                        .call(xAxis)
+                        .style('font-size', '12px');
+                    
+                    svg.append('g')
+                        .attr('transform', `translate(${margin.left}, 0)`)
+                        .call(yAxis)
+                        .style('font-size', '12px');
+                    
+                    // 添加标题
+                    svg.append('text')
+                        .attr('x', width / 2)
+                        .attr('y', margin.top / 2)
+                        .attr('text-anchor', 'middle')
+                        .style('font-size', '16px')
+                        .style('font-weight', 'bold')
+                        .style('fill', getComputedStyle(document.body).getPropertyValue('--text-color-dark'))
+                        .text('零件质量分布箱型图');
+                    
+                    // 添加坐标轴标签
+                    svg.append('text')
+                        .attr('x', width / 2)
+                        .attr('y', height - 10)
+                        .attr('text-anchor', 'middle')
+                        .style('font-size', '14px')
+                        .style('fill', getComputedStyle(document.body).getPropertyValue('--text-color-medium'))
+                        .text('零件类型');
+                    
+                    svg.append('text')
+                        .attr('transform', 'rotate(-90)')
+                        .attr('x', -height / 2)
+                        .attr('y', 20)
+                        .attr('text-anchor', 'middle')
+                        .style('font-size', '14px')
+                        .style('fill', getComputedStyle(document.body).getPropertyValue('--text-color-medium'))
+                        .text('质量评分');
+                    
+                    // 绘制箱型图
+                    boxplotData.forEach((item, index) => {
+                        const x = xScale(item.label) + xScale.bandwidth() / 2;
+                        
+                        // 绘制箱体
+                        svg.append('rect')
+                            .attr('x', x - 15)
+                            .attr('y', yScale(item.q3))
+                            .attr('width', 30)
+                            .attr('height', yScale(item.q1) - yScale(item.q3))
+                            .attr('fill', getComputedStyle(document.body).getPropertyValue('--primary-color'))
+                            .attr('opacity', '0.7')
+                            .attr('stroke', getComputedStyle(document.body).getPropertyValue('--text-color-dark'))
+                            .attr('stroke-width', 1);
+                        
+                        // 绘制中位数线
+                        svg.append('line')
+                            .attr('x1', x - 15)
+                            .attr('x2', x + 15)
+                            .attr('y1', yScale(item.median))
+                            .attr('y2', yScale(item.median))
+                            .attr('stroke', getComputedStyle(document.body).getPropertyValue('--alert-red'))
+                            .attr('stroke-width', 2);
+                        
+                        // 绘制上须线
+                        svg.append('line')
+                            .attr('x1', x)
+                            .attr('x2', x)
+                            .attr('y1', yScale(item.max))
+                            .attr('y2', yScale(item.q3))
+                            .attr('stroke', getComputedStyle(document.body).getPropertyValue('--text-color-dark'))
+                            .attr('stroke-width', 1);
+                        
+                        // 绘制下须线
+                        svg.append('line')
+                            .attr('x1', x)
+                            .attr('x2', x)
+                            .attr('y1', yScale(item.q1))
+                            .attr('y2', yScale(item.min))
+                            .attr('stroke', getComputedStyle(document.body).getPropertyValue('--text-color-dark'))
+                            .attr('stroke-width', 1);
+                        
+                        // 绘制上下须线端点
+                        svg.append('line')
+                            .attr('x1', x - 5)
+                            .attr('x2', x + 5)
+                            .attr('y1', yScale(item.max))
+                            .attr('y2', yScale(item.max))
+                            .attr('stroke', getComputedStyle(document.body).getPropertyValue('--text-color-dark'))
+                            .attr('stroke-width', 1);
+                        
+                        svg.append('line')
+                            .attr('x1', x - 5)
+                            .attr('x2', x + 5)
+                            .attr('y1', yScale(item.min))
+                            .attr('y2', yScale(item.min))
+                            .attr('stroke', getComputedStyle(document.body).getPropertyValue('--text-color-dark'))
+                            .attr('stroke-width', 1);
+                        
+                        // 添加数据标签
+                        svg.append('text')
+                            .attr('x', x)
+                            .attr('y', yScale(item.median) - 10)
+                            .attr('text-anchor', 'middle')
+                            .style('font-size', '10px')
+                            .style('fill', getComputedStyle(document.body).getPropertyValue('--text-color-dark'))
+                            .text(`中:${item.median}`);
+                    });
+                    
+                    console.log('箱型图绘制成功');
+                } catch (error) {
+                    console.error('D3.js箱型图绘制失败:', error);
+                    document.getElementById('chartDescription').textContent = 
+                        '箱型图加载失败: ' + error.message;
+                }
+            }, 100);
             
-            const yScale = d3.scaleLinear()
-                .domain([70, 100])
-                .range([height - margin.bottom, margin.top]);
-            
-            // 添加坐标轴
-            const xAxis = d3.axisBottom(xScale);
-            const yAxis = d3.axisLeft(yScale);
-            
-            svg.append('g')
-                .attr('transform', `translate(0, ${height - margin.bottom})`)
-                .call(xAxis);
-            
-            svg.append('g')
-                .attr('transform', `translate(${margin.left}, 0)`)
-                .call(yAxis);
-            
-            // 添加标题
-            svg.append('text')
-                .attr('x', width / 2)
-                .attr('y', margin.top / 2)
-                .attr('text-anchor', 'middle')
-                .style('font-size', '16px')
-                .style('font-weight', 'bold')
-                .text(dataset.description);
-            
-            // 添加坐标轴标签
-            svg.append('text')
-                .attr('x', width / 2)
-                .attr('y', height - 10)
-                .attr('text-anchor', 'middle')
-                .text('零件类型');
-            
-            svg.append('text')
-                .attr('transform', 'rotate(-90)')
-                .attr('x', -height / 2)
-                .attr('y', 20)
-                .attr('text-anchor', 'middle')
-                .text('质量评分');
-            
-            // 绘制箱型图
-            boxplotData.forEach((item, index) => {
-                const x = xScale(item.label) + xScale.bandwidth() / 2;
-                
-                // 绘制箱体
-                svg.append('rect')
-                    .attr('x', x - 15)
-                    .attr('y', yScale(item.q3))
-                    .attr('width', 30)
-                    .attr('height', yScale(item.q1) - yScale(item.q3))
-                    .attr('fill', '#4a90e2')
-                    .attr('stroke', '#2c3e50')
-                    .attr('stroke-width', 1);
-                
-                // 绘制中位数线
-                svg.append('line')
-                    .attr('x1', x - 15)
-                    .attr('x2', x + 15)
-                    .attr('y1', yScale(item.median))
-                    .attr('y2', yScale(item.median))
-                    .attr('stroke', '#e74c3c')
-                    .attr('stroke-width', 2);
-                
-                // 绘制上须线
-                svg.append('line')
-                    .attr('x1', x)
-                    .attr('x2', x)
-                    .attr('y1', yScale(item.max))
-                    .attr('y2', yScale(item.q3))
-                    .attr('stroke', '#2c3e50')
-                    .attr('stroke-width', 1);
-                
-                // 绘制下须线
-                svg.append('line')
-                    .attr('x1', x)
-                    .attr('x2', x)
-                    .attr('y1', yScale(item.q1))
-                    .attr('y2', yScale(item.min))
-                    .attr('stroke', '#2c3e50')
-                    .attr('stroke-width', 1);
-                
-                // 绘制上下须线端点
-                svg.append('line')
-                    .attr('x1', x - 5)
-                    .attr('x2', x + 5)
-                    .attr('y1', yScale(item.max))
-                    .attr('y2', yScale(item.max))
-                    .attr('stroke', '#2c3e50')
-                    .attr('stroke-width', 1);
-                
-                svg.append('line')
-                    .attr('x1', x - 5)
-                    .attr('x2', x + 5)
-                    .attr('y1', yScale(item.min))
-                    .attr('y2', yScale(item.min))
-                    .attr('stroke', '#2c3e50')
-                    .attr('stroke-width', 1);
-            });
-            
-            // 返回一个空的Chart.js配置，因为我们已经用D3.js绘制了图表
+            // 返回一个空的Chart.js配置
             return {
                 type: 'scatter',
                 data: { datasets: [] },
