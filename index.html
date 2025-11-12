@@ -6,6 +6,47 @@
     <title>数据可视化交互式平台 - 第2、3、4章集成</title>
     <meta name="description" content="基于matplotlib的数据可视化交互式学习平台，集成第2、3、4章内容，包含折线图、柱形图、三角函数、箱形图、散点图等多种图表类型和样式优化技术">
     <style>
+        /* 全局色彩变量定义 - 符合色彩使用规则 */
+        :root {
+            /* 主色 - 应用于标题、按钮、图表主系列 (占比≤20%) */
+            --primary-color: #1E40AF;
+            
+            /* 强调色 - 应用于核心指标、选中状态、标注图标 (占比≤5%) */
+            --accent-color: #D4AF37;
+            
+            /* 背景色 */
+            --bg-color-light: #F8F9FA;  /* 页面底色 */
+            --bg-color-card: #E9ECEF;  /* 卡片底色 */
+            --bg-color-divider: #DEE2E6; /* 分割线 */
+            
+            /* 文字色 */
+            --text-color-dark: #212529;  /* 标题 */
+            --text-color-medium: #495057; /* 正文 */
+            --text-color-light: #6C757D; /* 辅助说明 */
+            
+            /* 警示色 */
+            --alert-red: #DC3545;  /* 仅用于数据状态，不用于装饰 */
+            --alert-yellow: #FFC107;
+            --alert-green: #28A745;
+            
+            /* 支持深色模式 */
+            --dark-bg-color: #1a1d23;
+            --dark-card-color: #2d3748;
+            --dark-text-color: #e2e8f0;
+        }
+        
+        /* 深色模式变量 */
+        [data-theme="dark"] {
+            --primary-color: #3B82F6;
+            --accent-color: #F59E0B;
+            --bg-color-light: var(--dark-bg-color);
+            --bg-color-card: var(--dark-card-color);
+            --bg-color-divider: #4a5568;
+            --text-color-dark: var(--dark-text-color);
+            --text-color-medium: #cbd5e0;
+            --text-color-light: #a0aec0;
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -14,9 +55,10 @@
         
         body {
             font-family: 'Microsoft YaHei', 'SimHei', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-color-light);
             min-height: 100vh;
-            color: #333;
+            color: var(--text-color-medium);
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         
         .container {
@@ -28,25 +70,24 @@
         .header {
             text-align: center;
             margin-bottom: 50px;
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--bg-color-card);
             padding: 40px;
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--bg-color-divider);
         }
         
         .header h1 {
             font-size: 2.5em;
-            color: #2c3e50;
+            color: var(--primary-color);
             margin-bottom: 15px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         
         .header p {
             font-size: 1.2em;
-            color: #7f8c8d;
+            color: var(--text-color-medium);
             line-height: 1.6;
         }
         
@@ -58,33 +99,55 @@
         }
         
         .platform-card {
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--bg-color-card);
             border-radius: 15px;
             padding: 30px;
             text-align: center;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid var(--bg-color-divider);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
             cursor: pointer;
+            position: relative;
         }
         
         .platform-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-color);
+        }
+        
+        .platform-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-color);
+            border-radius: 15px 15px 0 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .platform-card:hover::before {
+            opacity: 1;
         }
         
         .platform-icon {
             font-size: 3em;
             margin-bottom: 20px;
+            color: var(--primary-color);
         }
         
         .platform-card h3 {
             font-size: 1.5em;
-            color: #2c3e50;
+            color: var(--text-color-dark);
             margin-bottom: 15px;
+            font-weight: 600;
         }
         
         .platform-card p {
-            color: #7f8c8d;
+            color: var(--text-color-medium);
             line-height: 1.6;
             margin-bottom: 20px;
         }
@@ -92,16 +155,21 @@
         .btn {
             display: inline-block;
             padding: 12px 30px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            background: var(--primary-color);
             color: white;
             text-decoration: none;
             border-radius: 25px;
-            font-weight: bold;
-            transition: transform 0.3s ease;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
         }
         
         .btn:hover {
-            transform: scale(1.05);
+            background: #1a3a8f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
         }
         
         .features {
@@ -138,8 +206,10 @@
         .footer {
             text-align: center;
             padding: 20px;
-            color: rgba(255, 255, 255, 0.8);
+            color: var(--text-color-light);
             font-size: 0.9em;
+            border-top: 1px solid var(--bg-color-divider);
+            margin-top: 40px;
         }
         
         @media (max-width: 768px) {
@@ -251,6 +321,38 @@
     </div>
 
     <script>
+        // 主题切换功能
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            
+            if (currentTheme === 'dark') {
+                html.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+            
+            updateThemeButton();
+        }
+        
+        // 更新主题切换按钮
+        function updateThemeButton() {
+            const theme = document.documentElement.getAttribute('data-theme');
+            const themeButton = document.querySelector('.theme-toggle');
+            if (themeButton) {
+                themeButton.textContent = theme === 'dark' ? '☀️ 浅色主题' : '🌙 深色主题';
+            }
+        }
+        
+        // 应用存储的主题设置
+        function applySavedTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeButton();
+        }
+        
         // 处理章节平台打开逻辑
         function openChapter(url) {
             // 检查文件是否存在，如果不存在则显示提示
@@ -259,7 +361,7 @@
                     if (response.ok) {
                         window.open(url, '_blank');
                     } else {
-                        alert('该章节平台文件不存在或无法访问。请确保所有文件已正确上传到GitHub仓库。');
+                        showNotification('该章节平台文件不存在或无法访问。请确保所有文件已正确上传到GitHub仓库。', 'error');
                     }
                 })
                 .catch(error => {
@@ -268,16 +370,112 @@
                     window.open(url, '_blank');
                 });
         }
+        
+        // 显示通知消息
+        function showNotification(message, type = 'info') {
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <span class="notification-icon">${type === 'error' ? '❌' : 'ℹ️'}</span>
+                    <span class="notification-text">${message}</span>
+                    <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            
+            // 添加样式
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'error' ? 'var(--alert-red)' : 'var(--primary-color)'};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 1000;
+                max-width: 400px;
+                animation: slideInRight 0.3s ease;
+                border-left: 4px solid ${type === 'error' ? '#c82333' : '#1a3a8f'};
+            `;
+            
+            // 添加动画样式
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideInRight {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                
+                .notification-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                
+                .notification-close {
+                    background: none;
+                    border: none;
+                    color: white;
+                    font-size: 18px;
+                    cursor: pointer;
+                    padding: 0;
+                    width: 20px;
+                    height: 20px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+            `;
+            
+            document.head.appendChild(style);
+            document.body.appendChild(notification);
+            
+            // 自动移除通知
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.style.animation = 'slideOutRight 0.3s ease';
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, 5000);
+        }
 
         // 页面加载时检查文件状态
         document.addEventListener('DOMContentLoaded', function() {
+            applySavedTheme();
+            
             const chapterFiles = [
                 'chapter2_interactive.html',
                 'chapter3_interactive.html', 
                 'chapter4_optimized_interactive_platform.html'
             ];
             
-            // 可以在这里添加文件状态检查逻辑
+            // 添加主题切换按钮
+            const header = document.querySelector('.header');
+            if (header && !document.querySelector('.theme-toggle')) {
+                const themeButton = document.createElement('button');
+                themeButton.className = 'theme-toggle';
+                themeButton.innerHTML = '🌙 深色主题';
+                themeButton.style.cssText = `
+                    position: absolute;
+                    top: 20px;
+                    right: 20px;
+                    background: var(--primary-color);
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 20px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    font-weight: 500;
+                    transition: all 0.3s ease;
+                `;
+                themeButton.onclick = toggleTheme;
+                header.style.position = 'relative';
+                header.appendChild(themeButton);
+            }
+            
             console.log('数据可视化平台已加载，包含第2、3、4章内容');
         });
     </script>

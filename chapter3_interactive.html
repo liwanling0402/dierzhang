@@ -5,7 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>第三章数据可视化平台 - 三角函数与电影票房分析</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
+        /* 全局色彩变量定义 */
+        :root {
+            --primary-color: #1E40AF;
+            --accent-color: #D4AF37;
+            --bg-color-light: #F8F9FA;
+            --bg-color-card: #E9ECEF;
+            --bg-color-divider: #DEE2E6;
+            --text-color-dark: #212529;
+            --text-color-medium: #495057;
+            --text-color-light: #6C757D;
+            --alert-red: #DC3545;
+            --alert-yellow: #FFC107;
+            --alert-green: #28A745;
+            --dark-bg-color: #1a1d23;
+            --dark-card-color: #2d3748;
+            --dark-text-color: #e2e8f0;
+        }
+        
+        [data-theme="dark"] {
+            --primary-color: #3B82F6;
+            --accent-color: #F59E0B;
+            --bg-color-light: var(--dark-bg-color);
+            --bg-color-card: var(--dark-card-color);
+            --bg-color-divider: #4a5568;
+            --text-color-dark: var(--dark-text-color);
+            --text-color-medium: #cbd5e0;
+            --text-color-light: #a0aec0;
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -14,9 +44,10 @@
         
         body {
             font-family: 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-color-light);
             min-height: 100vh;
-            color: #333;
+            color: var(--text-color-medium);
+            transition: all 0.3s ease;
         }
         
         .container {
@@ -27,27 +58,34 @@
         
         .header {
             text-align: center;
+            background: var(--bg-color-card);
+            padding: 30px;
+            border-radius: 15px;
             margin-bottom: 30px;
-            color: white;
+            border: 1px solid var(--bg-color-divider);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
         
         .header h1 {
+            color: var(--primary-color);
             font-size: 2.5em;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-weight: 700;
         }
         
         .header p {
+            color: var(--text-color-medium);
             font-size: 1.2em;
-            opacity: 0.9;
+            line-height: 1.6;
         }
         
         .control-panel {
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--bg-color-card);
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 30px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid var(--bg-color-divider);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
         
         .chart-type-selector {
@@ -61,7 +99,7 @@
             padding: 12px 20px;
             border: none;
             border-radius: 8px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            background: var(--primary-color);
             color: white;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -70,11 +108,13 @@
         
         .chart-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
+            background: #1a3a8f;
         }
         
         .chart-btn.active {
-            background: linear-gradient(45deg, #f093fb, #f5576c);
+            background: var(--accent-color);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
         }
         
         .dataset-selector {
@@ -128,6 +168,35 @@
         .description p {
             line-height: 1.6;
             margin-bottom: 10px;
+            color: var(--text-color-medium);
+        }
+        
+        .description h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary-color);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5em;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            color: white;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(30, 64, 175, 0.4);
+            background: #1a3a8f;
         }
         
         @media (max-width: 768px) {
@@ -147,6 +216,10 @@
     </style>
 </head>
 <body>
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    
     <div class="container">
         <div class="header">
             <h1>📊 第三章数据可视化平台</h1>
@@ -192,6 +265,15 @@
     </div>
 
     <script>
+        // 主题切换功能
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            const button = document.querySelector('.theme-toggle');
+            button.textContent = document.body.classList.contains('dark-theme') ? '☀️' : '🌙';
+            // 重新渲染图表以适应新主题
+            updateChart();
+        }
+
         let currentChart = null;
         let animationDuration = 1000;
 
@@ -209,11 +291,19 @@
             },
             
             boxplot: {
-                type: 'bar', // 使用柱形图替代箱形图，确保兼容性
+                type: 'boxplot',
                 labels: ["零件A", "零件B", "零件C", "零件D", "零件E", "零件F"],
-                data: [85, 88, 92, 78, 90, 82], // 使用平均值数据
-                description: "零件质量分布数据 - 6种零件平均质量评分",
-                seriesLabels: ["平均质量评分"]
+                data: [
+                    // 每个零件的数据：最小值, Q1, 中位数, Q3, 最大值
+                    [82, 85, 88, 90, 92],
+                    [84, 87, 89, 91, 94],
+                    [80, 83, 86, 89, 92],
+                    [75, 78, 81, 84, 87],
+                    [85, 88, 90, 92, 95],
+                    [78, 80, 82, 85, 88]
+                ],
+                description: "零件质量分布数据 - 箱型图展示六个零件质量分布的五数概括",
+                seriesLabels: ["质量分布"]
             },
             
             movie: {
@@ -311,33 +401,142 @@
         }
 
         function createBoxplotConfig(dataset) {
+            // 清空Chart.js容器，准备使用D3.js
+            const ctx = document.getElementById('myChart');
+            ctx.innerHTML = '';
+            
+            // 设置图表尺寸
+            const width = ctx.clientWidth;
+            const height = ctx.clientHeight;
+            const margin = {top: 40, right: 30, bottom: 60, left: 60};
+            
+            // 创建SVG
+            const svg = d3.select(ctx)
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height);
+            
+            // 创建数据
+            const boxplotData = dataset.data.map((item, index) => ({
+                label: dataset.labels[index],
+                min: item[0],
+                q1: item[1],
+                median: item[2],
+                q3: item[3],
+                max: item[4]
+            }));
+            
+            // 创建比例尺
+            const xScale = d3.scaleBand()
+                .domain(dataset.labels)
+                .range([margin.left, width - margin.right])
+                .padding(0.4);
+            
+            const yScale = d3.scaleLinear()
+                .domain([70, 100])
+                .range([height - margin.bottom, margin.top]);
+            
+            // 添加坐标轴
+            const xAxis = d3.axisBottom(xScale);
+            const yAxis = d3.axisLeft(yScale);
+            
+            svg.append('g')
+                .attr('transform', `translate(0, ${height - margin.bottom})`)
+                .call(xAxis);
+            
+            svg.append('g')
+                .attr('transform', `translate(${margin.left}, 0)`)
+                .call(yAxis);
+            
+            // 添加标题
+            svg.append('text')
+                .attr('x', width / 2)
+                .attr('y', margin.top / 2)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '16px')
+                .style('font-weight', 'bold')
+                .text(dataset.description);
+            
+            // 添加坐标轴标签
+            svg.append('text')
+                .attr('x', width / 2)
+                .attr('y', height - 10)
+                .attr('text-anchor', 'middle')
+                .text('零件类型');
+            
+            svg.append('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('x', -height / 2)
+                .attr('y', 20)
+                .attr('text-anchor', 'middle')
+                .text('质量评分');
+            
+            // 绘制箱型图
+            boxplotData.forEach((item, index) => {
+                const x = xScale(item.label) + xScale.bandwidth() / 2;
+                
+                // 绘制箱体
+                svg.append('rect')
+                    .attr('x', x - 15)
+                    .attr('y', yScale(item.q3))
+                    .attr('width', 30)
+                    .attr('height', yScale(item.q1) - yScale(item.q3))
+                    .attr('fill', '#4a90e2')
+                    .attr('stroke', '#2c3e50')
+                    .attr('stroke-width', 1);
+                
+                // 绘制中位数线
+                svg.append('line')
+                    .attr('x1', x - 15)
+                    .attr('x2', x + 15)
+                    .attr('y1', yScale(item.median))
+                    .attr('y2', yScale(item.median))
+                    .attr('stroke', '#e74c3c')
+                    .attr('stroke-width', 2);
+                
+                // 绘制上须线
+                svg.append('line')
+                    .attr('x1', x)
+                    .attr('x2', x)
+                    .attr('y1', yScale(item.max))
+                    .attr('y2', yScale(item.q3))
+                    .attr('stroke', '#2c3e50')
+                    .attr('stroke-width', 1);
+                
+                // 绘制下须线
+                svg.append('line')
+                    .attr('x1', x)
+                    .attr('x2', x)
+                    .attr('y1', yScale(item.q1))
+                    .attr('y2', yScale(item.min))
+                    .attr('stroke', '#2c3e50')
+                    .attr('stroke-width', 1);
+                
+                // 绘制上下须线端点
+                svg.append('line')
+                    .attr('x1', x - 5)
+                    .attr('x2', x + 5)
+                    .attr('y1', yScale(item.max))
+                    .attr('y2', yScale(item.max))
+                    .attr('stroke', '#2c3e50')
+                    .attr('stroke-width', 1);
+                
+                svg.append('line')
+                    .attr('x1', x - 5)
+                    .attr('x2', x + 5)
+                    .attr('y1', yScale(item.min))
+                    .attr('y2', yScale(item.min))
+                    .attr('stroke', '#2c3e50')
+                    .attr('stroke-width', 1);
+            });
+            
+            // 返回一个空的Chart.js配置，因为我们已经用D3.js绘制了图表
             return {
-                type: 'bar',
-                data: {
-                    labels: dataset.labels,
-                    datasets: [{
-                        label: dataset.seriesLabels[0],
-                        data: dataset.data,
-                        backgroundColor: [
-                            '#4a90e2', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'
-                        ],
-                        borderColor: '#34495e',
-                        borderWidth: 1
-                    }]
-                },
+                type: 'scatter',
+                data: { datasets: [] },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: {
-                        duration: animationDuration
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: dataset.description,
-                            font: { size: 16 }
-                        }
-                    }
+                    responsive: false,
+                    maintainAspectRatio: false
                 }
             };
         }
