@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>完整数据可视化交互式学习平台 - 第2-8章综合版</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="基于matplotlib的完整数据可视化学习平台，涵盖第2-8章内容，包括基础图表、样式优化、子图绘制、坐标轴定制、3D可视化和高级图表等完整学习体系">
+    <meta name="keywords" content="数据可视化,matplotlib,交互式图表,折线图,柱形图,3D可视化,高级图表,李宛凌,022340611">
+    <meta name="author" content="李宛凌 | 学号：022340611">
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="https://022340611.xyz/favicon.ico">
+    
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            position: relative;
+            margin: 0;
+            padding: 0;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+            background-size: cover;
+            opacity: 0.3;
+            z-index: -1;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            transition: all 0.3s ease;
+        }
+
+        .glass-effect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.45);
+        }
+
+        .chapter-tab {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            padding: 12px 20px;
+            margin: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            font-weight: 500;
+        }
+
+        .chapter-tab:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .chapter-tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            min-height: 400px;
+            transition: all 0.3s ease;
+        }
+
+        .chart-container:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .control-group {
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .control-group input,
+        .control-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .control-group input:focus,
+        .control-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .chart-info {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 400px;
+            font-size: 18px;
+            color: #666;
+        }
+
+        .loading::after {
+            content: '';
+            width: 30px;
+            height: 30px;
+            margin-left: 15px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .chapter-tab {
+                margin: 4px;
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+            
+            .glass-effect {
+                margin: 10px;
+                padding: 15px;
+            }
+        }
+
+        /* 返回顶部按钮 */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+
+        .back-to-top:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .back-to-top.show {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="glass-effect sticky top-4 z-50 mx-4 mt-4 p-6">
+        <div class="container mx-auto text-center">
+            <h1 class="text-3xl md:text-4xl font-bold gradient-text mb-4">
+                <i class="fas fa-chart-line mr-4"></i>
+                完整数据可视化交互式学习平台
+            </h1>
+            <p class="text-lg text-gray-600 mb-2">第2-8章综合版 - 从基础到高级的完整学习体系</p>
+            <p class="text-gray-500">李宛凌 | 学号：022340611 | 022340611.xyz</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Chapter Navigation -->
+        <div class="glass-effect p-6 mb-8">
+            <h2 class="text-2xl font-bold gradient-text text-center mb-6">
+                <i class="fas fa-book-open mr-3"></i>
+                章节导航
+            </h2>
+            <div class="flex flex-wrap justify-center" id="chapterTabs">
+                <!-- Chapter tabs will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Panel - Chart Selection -->
+            <div class="lg:col-span-1">
+                <div class="glass-effect p-6">
+                    <h3 class="text-xl font-bold gradient-text mb-4">
+                        <i class="fas fa-chart-bar mr-2"></i>
+                        图表选择
+                    </h3>
+                    <div id="chartSelection">
+                        <!-- Chart options will be generated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Control Panel -->
+                <div class="glass-effect p-6 mt-6">
+                    <h3 class="text-xl font-bold gradient-text mb-4">
+                        <i class="fas fa-sliders-h mr-2"></i>
+                        参数控制
+                    </h3>
+                    <div id="controlPanel">
+                        <div class="text-center text-gray-500">
+                            <i class="fas fa-hand-point-up text-3xl mb-2"></i>
+                            <p>请先选择一个章节和图表</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content - Chart Display -->
+            <div class="lg:col-span-2">
+                <div class="glass-effect p-6">
+                    <!-- Chart Info -->
+                    <div class="chart-info" id="chartInfo">
+                        <h3 class="text-xl font-bold gradient-text mb-2">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            <span id="chartTitle">欢迎使用完整数据可视化平台</span>
+                        </h3>
+                        <p id="chartDescription">
+                            本平台整合了第2-8章的所有内容，提供了从基础图表到高级可视化的完整学习体验。
+                            请选择一个章节开始探索数据可视化的精彩世界！
+                        </p>
+                    </div>
+
+                    <!-- Chart Canvas -->
+                    <div class="chart-container" id="chartCanvas">
+                        <div class="loading">正在准备图表...</div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="text-center mt-6">
+                        <button class="btn" onclick="refreshChart()">
+                            <i class="fas fa-sync-alt mr-2"></i>刷新图表
+                        </button>
+                        <button class="btn" onclick="exportChart()">
+                            <i class="fas fa-download mr-2"></i>导出图表
+                        </button>
+                        <button class="btn" onclick="toggleFullscreen()">
+                            <i class="fas fa-expand mr-2"></i>全屏模式
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="glass-effect p-8 mt-12">
+            <h2 class="text-3xl font-bold text-center gradient-text mb-8">
+                <i class="fas fa-star mr-3"></i>
+                平台特色功能
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="text-center">
+                    <div class="text-4xl mb-4 text-blue-500">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">7个章节完整内容</h3>
+                    <p class="text-gray-600">从基础图表到高级可视化，完整覆盖matplotlib学习体系</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl mb-4 text-green-500">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">30+图表类型</h3>
+                    <p class="text-gray-600">包含折线图、3D图、等高线图、桑基图等多样化图表</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl mb-4 text-purple-500">
+                        <i class="fas fa-mouse-pointer"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">完全交互式</h3>
+                    <p class="text-gray-600">实时参数调整，动态图表更新，直观学习体验</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl mb-4 text-orange-500">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">响应式设计</h3>
+                    <p class="text-gray-600">适配各种设备，随时随地学习数据可视化</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass-effect mx-4 mb-4 p-6 text-center">
+        <p class="text-gray-600 mb-2">
+            <i class="fas fa-graduation-cap mr-2"></i>
+            完整数据可视化交互式学习平台 | 
+            <i class="fas fa-user mr-2"></i>李宛凌 | 
+            <i class="fas fa-id-badge mr-2"></i>022340611
+        </p>
+        <p class="text-gray-500">
+            基于matplotlib | 第2-8章综合版 | 
+            <i class="fas fa-globe mr-2"></i>022340611.xyz
+        </p>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" onclick="scrollToTop()">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script>
+        // 章节数据结构
+        const chaptersData = {
+            chapter2: {
+                title: "第2章：折线图与柱形图基础",
+                icon: "fa-chart-line",
+                color: "blue",
+                charts: [
+                    {
+                        id: "line_basic",
+                        name: "基础折线图",
+                        description: "学习matplotlib折线图的基础绘制方法",
+                        controls: [
+                            { id: "points", label: "数据点数量", type: "range", min: 10, max: 100, value: 50, step: 10 },
+                            { id: "color", label: "线条颜色", type: "select", options: ["蓝色", "红色", "绿色", "紫色"] }
+                        ]
+                    },
+                    {
+                        id: "bar_basic",
+                        name: "基础柱形图",
+                        description: "掌握柱形图的创建和样式设置",
+                        controls: [
+                            { id: "bars", label: "柱子数量", type: "range", min: 5, max: 20, value: 10, step: 1 },
+                            { id: "orientation", label: "方向", type: "select", options: ["垂直", "水平"] }
+                        ]
+                    }
+                ]
+            },
+            chapter3: {
+                title: "第3章：多种图表类型应用",
+                icon: "fa-chart-pie",
+                color: "green",
+                charts: [
+                    {
+                        id: "pie_chart",
+                        name: "饼图",
+                        description: "学习饼图的绘制和自定义",
+                        controls: [
+                            { id: "segments", label: "分段数量", type: "range", min: 3, max: 8, value: 5, step: 1 },
+                            { id: "explode", label: "突出显示", type: "select", options: ["无", "最大值", "最小值"] }
+                        ]
+                    },
+                    {
+                        id: "box_plot",
+                        name: "箱形图",
+                        description: "掌握箱形图的统计特性展示",
+                        controls: [
+                            { id: "datasets", label: "数据集数量", type: "range", min: 1, max: 5, value: 3, step: 1 },
+                            { id: "style", label: "样式", type: "select", options: ["标准", "现代", "简洁"] }
+                        ]
+                    },
+                    {
+                        id: "scatter_plot",
+                        name: "散点图",
+                        description: "学习散点图和气泡图的绘制",
+                        controls: [
+                            { id: "points", label: "点数量", type: "range", min: 50, max: 500, value: 200, step: 50 },
+                            { id: "size", label: "点大小", type: "range", min: 1, max: 20, value: 8, step: 1 }
+                        ]
+                    }
+                ]
+            },
+            chapter4: {
+                title: "第4章：图表样式优化",
+                icon: "fa-palette",
+                color: "purple",
+                charts: [
+                    {
+                        id: "style_customization",
+                        name: "样式定制",
+                        description: "学习颜色、线型、字体等样式设置",
+                        controls: [
+                            { id: "theme", label: "主题", type: "select", options: ["默认", "暗色", "简约", "专业"] },
+                            { id: "grid", label: "网格", type: "select", options: ["显示", "隐藏"] }
+                        ]
+                    }
+                ]
+            },
+            chapter5: {
+                title: "第5章：子图绘制技术",
+                icon: "fa-th",
+                color: "red",
+                charts: [
+                    {
+                        id: "subplot_grid",
+                        name: "网格子图",
+                        description: "掌握多图表布局技术",
+                        controls: [
+                            { id: "rows", label: "行数", type: "range", min: 1, max: 4, value: 2, step: 1 },
+                            { id: "cols", label: "列数", type: "range", min: 1, max: 4, value: 2, step: 1 }
+                        ]
+                    }
+                ]
+            },
+            chapter6: {
+                title: "第6章：坐标轴定制技术",
+                icon: "fa-compass",
+                color: "indigo",
+                charts: [
+                    {
+                        id: "axis_customization",
+                        name: "坐标轴定制",
+                        description: "学习坐标轴的高级控制方法",
+                        controls: [
+                            { id: "scale", label: "刻度", type: "select", options: ["线性", "对数", "对称"] },
+                            { id: "spines", label: "轴脊显示", type: "select", options: ["全部", "仅左下", "仅右下", "无"] }
+                        ]
+                    }
+                ]
+            },
+            chapter7: {
+                title: "第7章：3D可视化与动图",
+                icon: "fa-cube",
+                color: "cyan",
+                charts: [
+                    {
+                        id: "plot3d_scatter",
+                        name: "3D散点图",
+                        description: "掌握3D散点图的绘制和交互",
+                        controls: [
+                            { id: "points", label: "点数量", type: "range", min: 50, max: 500, value: 200, step: 50 },
+                            { id: "rotation", label: "自动旋转", type: "select", options: ["开启", "关闭"] }
+                        ]
+                    },
+                    {
+                        id: "plot3d_surface",
+                        name: "3D曲面图",
+                        description: "学习3D曲面的创建和渲染",
+                        controls: [
+                            { id: "resolution", label: "分辨率", type: "range", min: 10, max: 50, value: 30, step: 5 },
+                            { id: "colormap", label: "色彩映射", type: "select", options: ["viridis", "plasma", "inferno", "magma"] }
+                        ]
+                    }
+                ]
+            },
+            chapter8: {
+                title: "第8章：高级数据可视化",
+                icon: "fa-chart-area",
+                color: "orange",
+                charts: [
+                    {
+                        id: "contour_plot",
+                        name: "等高线图",
+                        description: "学习等高线图的绘制和配置",
+                        controls: [
+                            { id: "density", label: "网格密度", type: "range", min: 10, max: 50, value: 30, step: 5 },
+                            { id: "levels", label: "等高线数量", type: "range", min: 5, max: 20, value: 10, step: 1 }
+                        ]
+                    },
+                    {
+                        id: "gantt_chart",
+                        name: "甘特图",
+                        description: "掌握项目管理的甘特图制作",
+                        controls: [
+                            { id: "tasks", label: "任务数量", type: "range", min: 3, max: 12, value: 8, step: 1 },
+                            { id: "show_progress", label: "显示进度", type: "select", options: ["显示", "隐藏"] }
+                        ]
+                    },
+                    {
+                        id: "sankey_diagram",
+                        name: "桑基图",
+                        description: "学习流量关系的桑基图绘制",
+                        controls: [
+                            { id: "nodes", label: "节点数量", type: "range", min: 3, max: 8, value: 5, step: 1 },
+                            { id: "thickness", label: "连接粗细", type: "range", min: 10, max: 30, value: 20, step: 5 }
+                        ]
+                    },
+                    {
+                        id: "treemap",
+                        name: "树状图",
+                        description: "掌握层次数据的树状图展示",
+                        controls: [
+                            { id: "levels", label: "层级深度", type: "range", min: 2, max: 4, value: 3, step: 1 },
+                            { id: "labels", label: "显示标签", type: "select", options: ["显示", "隐藏"] }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        // 全局变量
+        let currentChapter = null;
+        let currentChart = null;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeChapterTabs();
+            initializeEventListeners();
+            // 默认选择第2章
+            selectChapter('chapter2');
+        });
+
+        // 初始化章节标签
+        function initializeChapterTabs() {
+            const tabsContainer = document.getElementById('chapterTabs');
+            
+            Object.keys(chaptersData).forEach(chapterKey => {
+                const chapter = chaptersData[chapterKey];
+                const tab = document.createElement('div');
+                tab.className = 'chapter-tab';
+                tab.dataset.chapter = chapterKey;
+                tab.innerHTML = `
+                    <i class="fas ${chapter.icon} mr-2"></i>
+                    ${chapter.title.split('：')[0]}
+                `;
+                tab.addEventListener('click', () => selectChapter(chapterKey));
+                tabsContainer.appendChild(tab);
+            });
+        }
+
+        // 初始化事件监听器
+        function initializeEventListeners() {
+            // 返回顶部按钮
+            window.addEventListener('scroll', function() {
+                const backToTopBtn = document.querySelector('.back-to-top');
+                if (window.pageYOffset > 300) {
+                    backToTopBtn.classList.add('show');
+                } else {
+                    backToTopBtn.classList.remove('show');
+                }
+            });
+        }
+
+        // 选择章节
+        function selectChapter(chapterKey) {
+            currentChapter = chapterKey;
+            currentChart = null;
+            
+            // 更新标签状态
+            document.querySelectorAll('.chapter-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-chapter="${chapterKey}"]`).classList.add('active');
+            
+            // 更新图表选择
+            updateChartSelection(chapterKey);
+            
+            // 清空控制面板和图表
+            document.getElementById('controlPanel').innerHTML = `
+                <div class="text-center text-gray-500">
+                    <i class="fas fa-hand-point-up text-3xl mb-2"></i>
+                    <p>请选择一个图表</p>
+                </div>
+            `;
+            
+            updateChartInfo(null, null);
+            
+            document.getElementById('chartCanvas').innerHTML = `
+                <div class="loading">正在准备章节...</div>
+            `;
+        }
+
+        // 更新图表选择
+        function updateChartSelection(chapterKey) {
+            const chapter = chaptersData[chapterKey];
+            const selectionContainer = document.getElementById('chartSelection');
+            
+            let html = `<h4 class="font-semibold mb-3 text-gray-700">可用图表：</h4>`;
+            
+            chapter.charts.forEach(chart => {
+                html += `
+                    <div class="chart-option p-3 mb-2 bg-white rounded-lg border border-gray-200 cursor-pointer hover:border-blue-400 transition-colors" 
+                         onclick="selectChart('${chart.id}')">
+                        <h5 class="font-semibold text-gray-800">${chart.name}</h5>
+                        <p class="text-sm text-gray-600">${chart.description}</p>
+                    </div>
+                `;
+            });
+            
+            selectionContainer.innerHTML = html;
+        }
+
+        // 选择图表
+        function selectChart(chartId) {
+            if (!currentChapter) return;
+            
+            const chapter = chaptersData[currentChapter];
+            currentChart = chapter.charts.find(chart => chart.id === chartId);
+            
+            if (!currentChart) return;
+            
+            // 更新控制面板
+            updateControlPanel(currentChart);
+            
+            // 更新图表信息
+            updateChartInfo(currentChart.name, currentChart.description);
+            
+            // 绘制图表
+            drawChart();
+        }
+
+        // 更新控制面板
+        function updateControlPanel(chart) {
+            const controlPanel = document.getElementById('controlPanel');
+            
+            let html = `<h4 class="font-semibold mb-3 text-gray-700">参数控制：</h4>`;
+            
+            chart.controls.forEach(control => {
+                html += `
+                    <div class="control-group">
+                        <label for="${control.id}">${control.label}</label>
+                `;
+                
+                if (control.type === 'range') {
+                    html += `
+                        <input type="range" id="${control.id}" 
+                               min="${control.min}" max="${control.max}" 
+                               value="${control.value}" step="${control.step}"
+                               oninput="updateValue('${control.id}', this.value)">
+                        <span id="${control.id}-value" class="text-sm text-gray-600">${control.value}</span>
+                    `;
+                } else if (control.type === 'select') {
+                    const options = Array.isArray(control.options) 
+                        ? control.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')
+                        : control.options;
+                    html += `
+                        <select id="${control.id}" onchange="drawChart()">
+                            ${options}
+                        </select>
+                    `;
+                }
+                
+                html += `</div>`;
+            });
+            
+            controlPanel.innerHTML = html;
+        }
+
+        // 更新值显示
+        function updateValue(controlId, value) {
+            document.getElementById(`${controlId}-value`).textContent = value;
+            drawChart();
+        }
+
+        // 更新图表信息
+        function updateChartInfo(title, description) {
+            const titleElement = document.getElementById('chartTitle');
+            const descElement = document.getElementById('chartDescription');
+            
+            if (title && description) {
+                titleElement.textContent = title;
+                descElement.textContent = description;
+            } else {
+                titleElement.textContent = '完整数据可视化平台';
+                descElement.textContent = '本平台整合了第2-8章的所有内容，提供了从基础图表到高级可视化的完整学习体验。';
+            }
+        }
+
+        // 绘制图表
+        function drawChart() {
+            if (!currentChapter || !currentChart) return;
+            
+            const canvas = document.getElementById('chartCanvas');
+            canvas.innerHTML = '<div class="loading">正在生成图表...</div>';
+            
+            setTimeout(() => {
+                switch(currentChart.id) {
+                    case 'line_basic':
+                        drawBasicLineChart();
+                        break;
+                    case 'bar_basic':
+                        drawBasicBarChart();
+                        break;
+                    case 'pie_chart':
+                        drawPieChart();
+                        break;
+                    case 'box_plot':
+                        drawBoxPlot();
+                        break;
+                    case 'scatter_plot':
+                        drawScatterPlot();
+                        break;
+                    case 'contour_plot':
+                        drawContourPlot();
+                        break;
+                    case 'gantt_chart':
+                        drawGanttChart();
+                        break;
+                    case 'sankey_diagram':
+                        drawSankeyDiagram();
+                        break;
+                    case 'treemap':
+                        drawTreemap();
+                        break;
+                    case 'plot3d_scatter':
+                        draw3DScatter();
+                        break;
+                    case 'plot3d_surface':
+                        draw3DSurface();
+                        break;
+                    default:
+                        drawPlaceholderChart();
+                        break;
+                }
+            }, 300);
+        }
+
+        // 基础折线图
+        function drawBasicLineChart() {
+            const points = parseInt(document.getElementById('points').value);
+            const color = document.getElementById('color').value;
+            
+            const x = Array.from({length: points}, (_, i) => i);
+            const y = x.map(i => Math.sin(i * 0.1) + Math.random() * 0.2);
+            
+            const trace = {
+                x: x,
+                y: y,
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: { color: color === '蓝色' ? 'blue' : color === '红色' ? 'red' : color === '绿色' ? 'green' : 'purple' },
+                marker: { size: 6 }
+            };
+            
+            const layout = {
+                title: '基础折线图',
+                xaxis: { title: 'X轴' },
+                yaxis: { title: 'Y轴' }
+            };
+            
+            Plotly.newPlot('chartCanvas', [trace], layout);
+        }
+
+        // 基础柱形图
+        function drawBasicBarChart() {
+            const bars = parseInt(document.getElementById('bars').value);
+            const orientation = document.getElementById('orientation').value;
+            
+            const x = Array.from({length: bars}, (_, i) => `项目${i+1}`);
+            const y = Array.from({length: bars}, () => Math.random() * 100 + 20);
+            
+            const trace = {
+                x: orientation === '垂直' ? x : y,
+                y: orientation === '垂直' ? y : x,
+                type: 'bar',
+                orientation: orientation === '垂直' ? 'v' : 'h',
+                marker: { color: 'rgba(102, 126, 234, 0.8)' }
+            };
+            
+            const layout = {
+                title: '基础柱形图',
+                xaxis: { title: orientation === '垂直' ? '类别' : '数值' },
+                yaxis: { title: orientation === '垂直' ? '数值' : '类别' }
+            };
+            
+            Plotly.newPlot('chartCanvas', [trace], layout);
+        }
+
+        // 饼图
+        function drawPieChart() {
+            const segments = parseInt(document.getElementById('segments').value);
+            const explode = document.getElementById('explode').value;
+            
+            const labels = Array.from({length: segments}, (_, i) => `部分${i+1}`);
+            const values = Array.from({length: segments}, () => Math.random() * 100 + 10);
+            
+            const explodeIndex = explode === '最大值' ? values.indexOf(Math.max(...values)) : 
+                              explode === '最小值' ? values.indexOf(Math.min(...values)) : 
+                              -1;
+            
+            const pull = Array.from({length: segments}, (_, i) => i === explodeIndex ? 0.2 : 0);
+            
+            const trace = {
+                labels: labels,
+                values: values,
+                type: 'pie',
+                pull: pull,
+                marker: {
+                    colors: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F']
+                }
+            };
+            
+            const layout = {
+                title: '饼图',
+                showlegend: true
+            };
+            
+            Plotly.newPlot('chartCanvas', [trace], layout);
+        }
+
+        // 箱形图
+        function drawBoxPlot() {
+            const datasets = parseInt(document.getElementById('datasets').value);
+            const style = document.getElementById('style').value;
+            
+            const traces = Array.from({length: datasets}, (_, i) => {
+                const data = Array.from({length: 50}, () => Math.random() * 100 + i * 20);
+                return {
+                    y: data,
+                    type: 'box',
+                    name: `数据集${i+1}`,
+                    boxpoints: style === '现代' ? 'all' : style === '简洁' ? false : 'suspectedoutliers'
+                };
+            });
+            
+            const layout = {
+                title: '箱形图',
+                yaxis: { title: '数值' }
+            };
+            
+            Plotly.newPlot('chartCanvas', traces, layout);
+        }
+
+        // 散点图
+        function drawScatterPlot() {
+            const points = parseInt(document.getElementById('points').value);
+            const size = parseInt(document.getElementById('size').value);
+            
+            const x = Array.from({length: points}, () => Math.random() * 100);
+            const y = Array.from({length: points}, () => Math.random() * 100);
+            const colors = Array.from({length: points}, () => Math.random() * 100);
+            
+            const trace = {
+                x: x,
+                y: y,
+                mode: 'markers',
+                marker: {
+                    size: size,
+                    color: colors,
+                    colorscale: 'Viridis',
+                    showscale: true
+                },
+                type: 'scatter'
+            };
+            
+            const layout = {
+                title: '散点图',
+                xaxis: { title: 'X轴' },
+                yaxis: { title: 'Y轴' }
+            };
+            
+            Plotly.newPlot('chartCanvas', [trace], layout);
+        }
+
+        // 等高线图
+        function drawContourPlot() {
+            const density = parseInt(document.getElementById('density').value);
+            const levels = parseInt(document.getElementById('levels').value);
+            
+            const size = density;
+            const x = Array.from({length: size}, (_, i) => i);
+            const y = Array.from({length: size}, (_, i) => i);
+            const z = Array.from({length: size}, (_, i) => 
+                Array.from({length: size}, (_, j) => 
+                    Math.sin(i * 0.1) * Math.cos(j * 0.1) + Math.random() * 0.2
+                )
+            );
+            
+            const trace = {
+                x: x,
+                y: y,
+                z: z,
+                type: 'contour',
+                colorscale: 'Viridis',
+                contours: {
+                    start: Math.min(...z.flat()),
+                    end: Math.max(...z.flat()),
+                    size: levels
+                }
+            };
+            
+            const layout = {
+                title: '等高线图',
+                xaxis: { title: 'X轴' },
+                yaxis: { title: 'Y轴' }
+            };
+            
+            Plotly.newPlot('chartCanvas', [trace], layout);
+        }
+
+        // 甘特图
+        function drawGanttChart() {
+            const tasks = parseInt(document.getElementById('tasks').value);
+            const showProgress = document.getElementById('show_progress').value === '显示';
+            
+            const taskNames = Array.from({length: tasks}, (_, i) => `任务${i+1}`);
+            const startDates = Array.from({length: tasks}, () => Math.random() * 20);
+            const durations = Array.from({length: tasks}, () => Math.random() * 15 + 5);
+            
+            const trace = {
+                x: startDates,
+                y: taskNames,
+                type: 'scatter',
+                mode: 'markers',
+                marker: {
+                    symbol: 'square',
+                    size: durations,
+                    color: showProgress ? durations : 'rgba(102, 126, 234, 0.8)',
+                    colorscale: 'Reds',
+                    showscale: showProgress
+                }
+            };
+            
+            const layout = {
+                title: '甘特图',
+                xaxis: { title: '开始时间' },
+                yaxis: { title: '任务' }
+            };
+            
+            Plotly.newPlot('chartCanvas', [trace], layout);
+        }
+
+        // 桑基图
+        function drawSankeyDiagram() {
+            const nodes = parseInt(document.getElementById('nodes').value);
+            const thickness = parseInt(document.getElementById('thickness').value);
+            
+            const nodeLabels = Array.from({length: nodes}, (_, i) => `节点${i+1}`);
+            const sourceIndices = Array.from({length: Math.floor(nodes/2)}, (_, i) => i);
+            const targetIndices = Array.from({length: Math.floor(nodes/2)}, (_, i) => i + Math.floor(nodes/2));
+            const values = Array.from({length: Math.floor(nodes/2)}, () => Math.random() * 20 + 5);
+            
+            const trace = {
+                type: 'sankey',
+                orientation: 'h',
+                node: {
+                    pad: 15,
+                    thickness: thickness,
+                    line: { color: 'black', width: 0.5 },
+                    label: nodeLabels
+                },
+                link: {
+                    source: sourceIndices,
+                    target: targetIndices,
+                    value: values
+                }
+            };
+            
+            const layout = {
+                title: '桑基图',
+                font: { size: 10 }
+            };
+            
+            Plotly.newPlot('chartCanvas', [trace], layout);
+        }
+
+        // 树状图
+        function drawTreemap() {
+            const levels = parseInt(document.getElementById('levels').value);
+            const showLabels = document.getElementById('labels').value === '显示';
+            
+            const labels = ['根节点', '节点1', '节点2', '节点3', '子节点1', '子节点2', '子节点3'];
+            const parents = ['', '根节点', '根节点', '根节点', '节点1', '节点2', '节点3'];
+            const values = [100, 40, 35, 25, 15, 20, 10];
+            
+            const trace = {
+                type: 'treemap',
+                labels: labels,
+                parents: parents,
+                values: values,
+                textinfo: showLabels ? 'label+value' : 'none'
+            };
+            
+            const layout = {
+                title: '树状图',
+                margin: { l: 0, r: 0, b: 0, t: 30 }
+            };
+            
+            Plotly.newPlot('chartCanvas', [trace], layout);
+        }
+
+        // 3D散点图
+        function draw3DScatter() {
+            const points = parseInt(document.getElementById('points').value);
+            const rotation = document.getElementById('rotation').value === '开启';
+            
+            const x = Array.from({length: points}, () => Math.random() * 100);
+            const y = Array.from({length: points}, () => Math.random() * 100);
+            const z = Array.from({length: points}, () => Math.random() * 100);
+            const colors = Array.from({length: points}, () => Math.random() * 100);
+            
+            const trace = {
+                x: x,
+                y: y,
+                z: z,
+                mode: 'markers',
+                marker: {
+                    size: 5,
+                    color: colors,
+                    colorscale: 'Viridis',
+                    showscale: true
+                },
+                type: 'scatter3d'
+            };
+            
+            const layout = {
+                title: '3D散点图',
+                scene: {
+                    xaxis: { title: 'X轴' },
+                    yaxis: { title: 'Y轴' },
+                    zaxis: { title: 'Z轴' }
+                }
+            };
+            
+            Plotly.newPlot('chartCanvas', [trace], layout);
+        }
+
+        // 3D曲面图
+        function draw3DSurface() {
+            const resolution = parseInt(document.getElementById('resolution').value);
+            const colormap = document.getElementById('colormap').value;
+            
+            const size = resolution;
+            const x = Array.from({length: size}, (_, i) => i);
+            const y = Array.from({length: size}, (_, i) => i);
+            const z = Array.from({length: size}, (_, i) => 
+                Array.from({length: size}, (_, j) => 
+                    Math.sin(i * 0.1) * Math.cos(j * 0.1) * Math.sin((i+j) * 0.05)
+                )
+            );
+            
+            const trace = {
+                x: x,
+                y: y,
+                z: z,
+                type: 'surface',
+                colorscale: colormap
+            };
+            
+            const layout = {
+                title: '3D曲面图',
+                scene: {
+                    xaxis: { title: 'X轴' },
+                    yaxis: { title: 'Y轴' },
+                    zaxis: { title: 'Z轴' }
+                }
+            };
+            
+            Plotly.newPlot('chartCanvas', [trace], layout);
+        }
+
+        // 占位符图表
+        function drawPlaceholderChart() {
+            const canvas = document.getElementById('chartCanvas');
+            canvas.innerHTML = `
+                <div class="text-center py-20">
+                    <i class="fas fa-chart-line text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">图表开发中</h3>
+                    <p class="text-gray-500">该图表类型正在开发中，敬请期待...</p>
+                </div>
+            `;
+        }
+
+        // 刷新图表
+        function refreshChart() {
+            if (currentChapter && currentChart) {
+                drawChart();
+            }
+        }
+
+        // 导出图表
+        function exportChart() {
+            Plotly.downloadImage('chartCanvas', {
+                format: 'png',
+                width: 1200,
+                height: 800,
+                filename: `complete_platform_${currentChapter}_${currentChart.id}_${new Date().getTime()}`
+            });
+        }
+
+        // 全屏模式
+        function toggleFullscreen() {
+            const canvas = document.getElementById('chartCanvas');
+            
+            if (!document.fullscreenElement) {
+                canvas.requestFullscreen().catch(err => {
+                    console.log(`全屏模式错误: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // 返回顶部
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+    </script>
+</body>
+</html>

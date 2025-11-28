@@ -1,0 +1,256 @@
+# Apache 服务器配置 - 完整数据可视化平台
+# 用于 022340611.xyz 域名，整合第2-8章所有内容
+
+# 启用重写引擎
+RewriteEngine On
+
+# ===============================
+# 平台路由重定向
+# ===============================
+
+# 主页
+RewriteRule ^/?$ index.html [L,NC]
+
+# 综合平台入口（推荐访问方式）
+RewriteRule ^(platform|complete|all-chapters)$ complete_platform.html [L,NC]
+RewriteRule ^(platform|complete|all-chapters)/?$ complete_platform.html [L,NC]
+
+# 第8章专用路由
+RewriteRule ^chapter8/?$ chapter8_final.html [L,NC]
+RewriteRule ^chapter8/interactive$ chapter8_final.html [L,NC]
+RewriteRule ^chapter8/advanced$ chapter8_final.html [L,NC]
+
+# 章节路由（兼容性）
+RewriteRule ^chapter2/?$ chapter2_interactive.html [L,NC]
+RewriteRule ^chapter3/?$ chapter3_interactive.html [L,NC]
+RewriteRule ^chapter4/?$ chapter4_optimized_interactive_platform.html [L,NC]
+RewriteRule ^chapter5/?$ chapter5_interactive.html [L,NC]
+RewriteRule ^chapter6/?$ chapter6_interactive.html [L,NC]
+RewriteRule ^chapter7/?$ chapter7_interactive.html [L,NC]
+
+# API路由（预留）
+RewriteRule ^api/(.*)$ api/$1.php [L,QSA]
+
+# ===============================
+# 文件安全和访问控制
+# ===============================
+
+# 禁止访问敏感文件
+<FilesMatch "^\.">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+<FilesMatch "\.(log|txt|md|yml|json|sh|conf|py|ipynb)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# 允许访问HTML、CSS、JS、图片文件
+<FilesMatch "\.(html|htm|css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2)$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+# ===============================
+# 性能优化设置
+# ===============================
+
+# 启用压缩
+<IfModule mod_deflate.c>
+    # HTML文档
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/xml
+    
+    # CSS和JavaScript
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLINE text/javascript
+    AddOutputFilterByType DEFLINE application/javascript
+    AddOutputFilterByType DEFLINE application/x-javascript
+    
+    # JSON数据
+    AddOutputFilterByType DEFLINE application/json
+    
+    # SVG和字体
+    AddOutputFilterByType DEFLINE image/svg+xml
+    AddOutputFilterByType DEFLINE application/font-woff
+    AddOutputFilterByType DEFLINE application/font-woff2
+    
+    # 设置压缩级别
+    DeflateCompressionLevel 6
+    
+    # 排除已压缩文件
+    SetEnvIfNoCase Request_URI \
+        \.(?:gif|jpe?g|png)$ no-gzip dont-vary
+    SetEnvIfNoCase Request_URI \
+        \.(?:exe|t?gz|zip|bz2|sit|rar)$ no-gzip dont-vary
+</IfModule>
+
+# ===============================
+# 缓存策略设置
+# ===============================
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # HTML文档 - 短期缓存（便于更新）
+    ExpiresByType text/html "access plus 0 seconds"
+    ExpiresByType application/xhtml+xml "access plus 0 seconds"
+    
+    # CSS和JavaScript - 长期缓存
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType application/x-javascript "access plus 1 year"
+    
+    # 图片文件 - 长期缓存
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    
+    # 字体文件 - 长期缓存
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType application/font-woff "access plus 1 year"
+    ExpiresByType application/font-woff2 "access plus 1 year"
+    
+    # 其他文件
+    ExpiresDefault "access plus 1 month"
+</IfModule>
+
+# ===============================
+# 安全头设置
+# ===============================
+
+<IfModule mod_headers.c>
+    # 基本安全头
+    Header always set X-Frame-Options "DENY"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # CSP内容安全策略（允许CDN）
+    Header always set Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net cdn.plot.lycdnjs.cloudflare.com; img-src 'self' data: https:; font-src 'self' cdnjs.cloudflare.com fonts.googleapis.com; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net cdn.plot.lycdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' cdnjs.cloudflare.com fonts.googleapis.com;"
+    
+    # CORS设置
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS, HEAD"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+    Header always set Access-Control-Max-Age "86400"
+    
+    # 针对图表CDN的特殊设置
+    <FilesMatch "\.(css|js)$">
+        Header always set Access-Control-Allow-Origin "*"
+        Header always set Access-Control-Allow-Methods "GET"
+        Header always set Access-Control-Allow-Headers "Content-Type"
+    </FilesMatch>
+    
+    # 针对HTML文件的缓存控制
+    <FilesMatch "\.html$">
+        Header always set Cache-Control "no-cache, no-store, must-revalidate"
+        Header always set Pragma "no-cache"
+        Header always set Expires "0"
+    </FilesMatch>
+</IfModule>
+
+# ===============================
+# HTTPS重定向
+# ===============================
+
+<IfModule mod_ssl.c>
+    # 强制HTTPS
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    
+    # HSTS安全头
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+</IfModule>
+
+# ===============================
+# 错误页面设置
+# ===============================
+
+ErrorDocument 400 "<!DOCTYPE html><html><head><title>400 - 请求错误</title><style>body{font-family:Arial,sans-serif;text-align:center;margin-top:100px;}h1{color:#667eea;}p{color:#666;}</style></head><body><h1>400 - 请求错误</h1><p>您的请求有误，请检查URL是否正确。</p><a href='/'>返回首页</a></body></html>"
+
+ErrorDocument 403 "<!DOCTYPE html><html><head><title>403 - 访问被拒绝</title><style>body{font-family:Arial,sans-serif;text-align:center;margin-top:100px;}h1{color:#764ba2;}p{color:#666;}</style></head><body><h1>403 - 访问被拒绝</h1><p>您没有权限访问此页面。</p><a href='/'>返回首页</a></body></html>"
+
+ErrorDocument 404 "<!DOCTYPE html><html><head><title>404 - 页面未找到</title><style>body{font-family:Arial,sans-serif;text-align:center;margin-top:100px;}h1{color:#667eea;}p{color:#666;}</style></head><body><h1>404 - 页面未找到</h1><p>您访问的页面不存在。</p><a href='/'>返回首页</a></body></html>"
+
+ErrorDocument 500 "<!DOCTYPE html><html><head><title>500 - 服务器错误</title><style>body{font-family:Arial,sans-serif;text-align:center;margin-top:100px;}h1{color:#e74c3c;}p{color:#666;}</style></head><body><h1>500 - 服务器内部错误</h1><p>服务器出现问题，请稍后重试。</p><a href='/'>返回首页</a></body></html>"
+
+# ===============================
+# 文件类型设置
+# ===============================
+
+# MIME类型
+AddType application/javascript .js
+AddType text/css .css
+AddType image/svg+xml .svg
+AddType application/font-woff .woff
+AddType application/font-woff2 .woff2
+AddType application/json .json
+
+# 默认字符编码
+AddDefaultCharset UTF-8
+
+# ===============================
+# 性能和缓存控制
+# ===============================
+
+<IfModule mod_pagespeed.c>
+    ModPagespeed on
+    ModPagespeedEnableFilters extend_cache
+    ModPagespeedEnableFilters rewrite_css
+    ModPagespeedEnableFilters rewrite_javascript
+    ModPagespeedEnableFilters compress_images
+    ModPagespeedEnableFilters collapse_whitespace
+    ModPagespeedEnableFilters remove_comments
+</IfModule>
+
+# ===============================
+# 针对特定文件的优化
+# ===============================
+
+# 综合平台优化
+<Files "complete_platform.html">
+    # 重要页面，特殊处理
+    AddOutputFilterByType DEFLATE text/html
+    Header always set Cache-Control "public, max-age=3600"
+    
+    # 确保所有CDN资源可访问
+    <IfModule mod_headers.c>
+        Header always set Access-Control-Allow-Origin "*"
+    </IfModule>
+</Files>
+
+# 第8章平台优化
+<Files "chapter8_final.html">
+    AddOutputFilterByType DEFLATE text/html
+    Header always set Cache-Control "public, max-age=1800"
+</Files>
+
+# 其他章节页面
+<FilesMatch "chapter[2-7]_.*\.html$">
+    AddOutputFilterByType DEFLATE text/html
+    Header always set Cache-Control "public, max-age=7200"
+</Files>
+
+# ===============================
+# 访问日志和统计
+# ===============================
+
+# 启用访问日志（如果需要）
+# LogLevel info
+# CustomLog ${APACHE_LOG_DIR}/datavis_access.log combined
+# ErrorLog ${APACHE_LOG_DIR}/datavis_error.log
+
+# ===============================
+# 结束配置
+# ===============================
+
+# 确保配置生效
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+</IfModule>
