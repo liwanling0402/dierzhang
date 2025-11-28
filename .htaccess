@@ -1,0 +1,155 @@
+# Apache 服务器配置
+# 用于 022340611.xyz 域名的第8章数据可视化平台
+
+# 启用重写引擎
+RewriteEngine On
+
+# 第8章平台路由重定向
+RewriteRule ^chapter8/?$ chapter8_final.html [L,NC]
+RewriteRule ^chapter8/interactive$ chapter8_final.html [L,NC]
+RewriteRule ^chapter8/advanced$ chapter8_final.html [L,NC]
+
+# 安全设置
+<Files "chapter8_final.html">
+    # 允许所有访问
+    Order Allow,Deny
+    Allow from all
+    
+    # 设置默认字符编码
+    AddDefaultCharset UTF-8
+    
+    # 启用压缩
+    <IfModule mod_deflate.c>
+        AddOutputFilterByType DEFLATE text/html
+        AddOutputFilterByType DEFLATE text/css
+        AddOutputFilterByType DEFLATE application/javascript
+        AddOutputFilterByType DEFLATE application/json
+    </IfModule>
+    
+    # 设置缓存策略
+    <IfModule mod_expires.c>
+        ExpiresActive On
+        ExpiresByType text/html "access plus 0 seconds"
+        ExpiresByType text/css "access plus 1 month"
+        ExpiresByType application/javascript "access plus 1 month"
+        ExpiresByType image/png "access plus 1 month"
+        ExpiresByType image/jpeg "access plus 1 month"
+        ExpiresByType image/gif "access plus 1 month"
+        ExpiresByType image/x-icon "access plus 1 year"
+    </IfModule>
+</Files>
+
+# 通用安全头设置
+<IfModule mod_headers.c>
+    # 防止点击劫持
+    Header always set X-Frame-Options "DENY"
+    
+    # 防止MIME类型嗅探
+    Header always set X-Content-Type-Options "nosniff"
+    
+    # 启用XSS保护
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # 设置引用策略
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # 内容安全策略（CORS）
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type"
+    
+    # 针对图表CDN的特殊设置
+    <FilesMatch "\.(css|js)$">
+        Header always set Access-Control-Allow-Origin "*"
+        Header always set Access-Control-Allow-Methods "GET"
+        Header always set Access-Control-Allow-Headers "Content-Type"
+    </FilesMatch>
+</IfModule>
+
+# 错误页面设置
+ErrorDocument 404 "页面未找到 - 请检查URL是否正确"
+ErrorDocument 500 "服务器内部错误 - 请稍后重试"
+
+# 禁止访问敏感文件
+<FilesMatch "^\.">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+<FilesMatch "\.(log|txt|md|yml|json|sh)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# 启用HTTPS重定向（如果支持SSL）
+<IfModule mod_ssl.c>
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# 性能优化
+<IfModule mod_pagespeed.c>
+    ModPagespeed on
+    ModPagespeedEnableFilters compress_images
+    ModPagespeedEnableFilters rewrite_css
+    ModPagespeedEnableFilters rewrite_javascript
+</IfModule>
+
+# 浏览器缓存设置
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # HTML文档 - 不缓存
+    ExpiresByType text/html "access plus 0 seconds"
+    
+    # CSS和JS文件 - 长期缓存
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType application/x-javascript "access plus 1 year"
+    
+    # 图片文件 - 长期缓存
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    
+    # 字体文件 - 长期缓存
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType application/font-woff "access plus 1 year"
+    ExpiresByType application/font-woff2 "access plus 1 year"
+</IfModule>
+
+# Gzip压缩设置
+<IfModule mod_deflate.c>
+    # 压缩HTML、CSS、JavaScript文件
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    
+    # 压缩图片文件
+    AddOutputFilterByType DEFLATE image/svg+xml
+    
+    # 设置压缩级别
+    SetOutputFilter DEFLATE
+    SetEnvIfNoCase Request_URI \
+        \.(?:gif|jpe?g|png)$ no-gzip dont-vary
+    SetEnvIfNoCase Request_URI \
+        \.(?:exe|t?gz|zip|bz2|sit|rar)$ no-gzip dont-vary
+</IfModule>
+
+# 文件类型设置
+AddType application/javascript .js
+AddType text/css .css
+AddType image/svg+xml .svg
+AddType application/font-woff .woff
+AddType application/font-woff2 .woff2
+
+# 默认字符编码
+AddDefaultCharset UTF-8
