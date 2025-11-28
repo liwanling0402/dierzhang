@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第五章：子图绘制 - 交互式可视化平台</title>
+    <meta name="description" content="基于matplotlib的第五章子图绘制交互式平台，探索多图表布局和数据可视化的高级技巧">
+    <meta name="author" content="李宛凌 | 学号：022340611">
+    <meta name="keywords" content="数据可视化,matplotlib,子图绘制,交互式图表,数据分析">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="第五章：子图绘制 - 交互式可视化平台">
+    <meta property="og:description" content="基于matplotlib的第五章子图绘制交互式平台，探索多图表布局和数据可视化的高级技巧">
+    <meta property="og:image" content="https://022340611.xyz/图表10_产品性能雷达图.png">
+    <meta property="og:url" content="https://022340611.xyz/chapter5_interactive.html">
+    <meta property="og:type" content="website">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="https://022340611.xyz/favicon.ico">
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+            background-size: cover;
+            z-index: -1;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-effect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.45);
+        }
+        
+        .nav-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .nav-button.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .chart-container {
+            position: relative;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .chart-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .section-title {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: bold;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .control-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .chart-container {
+                margin: 5px;
+                padding: 15px;
+            }
+            
+            .nav-button {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+            
+            .section-title {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Navigation -->
+    <header class="glass-effect sticky top-4 z-50 mx-4 mt-4 p-4">
+        <div class="container mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="text-center md:text-left mb-4 md:mb-0">
+                    <h1 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        第五章：子图绘制 - 交互式可视化平台
+                    </h1>
+                    <p class="text-gray-600 mt-2">探索多图表布局的高级技巧 | 李宛凌 022340611</p>
+                </div>
+                <div class="flex flex-wrap gap-2 justify-center">
+                    <a href="https://022340611.xyz" class="nav-button">
+                        <i class="fas fa-home mr-2"></i>主页
+                    </a>
+                    <a href="https://022340611.xyz/chapter2_interactive.html" class="nav-button">
+                        <i class="fas fa-chart-line mr-2"></i>第2章
+                    </a>
+                    <a href="https://022340611.xyz/chapter3_interactive.html" class="nav-button">
+                        <i class="fas fa-chart-bar mr-2"></i>第3章
+                    </a>
+                    <a href="https://022340611.xyz/chapter4_optimized_interactive_platform.html" class="nav-button">
+                        <i class="fas fa-palette mr-2"></i>第4章
+                    </a>
+                    <a href="https://022340611.xyz/chapter5_interactive.html" class="nav-button active">
+                        <i class="fas fa-th mr-2"></i>第5章
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">数据模块选择</label>
+                    <select id="moduleSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="products">产品销售分析</option>
+                        <option value="pets">宠物养宠比例</option>
+                        <option value="tiktok">抖音用户分析</option>
+                        <option value="weather">气象数据分析</option>
+                        <option value="cars">汽车销售分析</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">布局模式</label>
+                    <select id="layoutSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="grid">网格布局</option>
+                        <option value="flex">流式布局</option>
+                        <option value="custom">自定义布局</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">动画效果</label>
+                    <select id="animationSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="none">无动画</option>
+                        <option value="fade">渐变效果</option>
+                        <option value="slide">滑动效果</option>
+                        <option value="bounce">弹跳效果</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-2">
+                <button onclick="refreshCharts()" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">
+                    <i class="fas fa-sync-alt mr-2"></i>刷新图表
+                </button>
+                <button onclick="exportCharts()" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">
+                    <i class="fas fa-download mr-2"></i>导出图表
+                </button>
+                <button onclick="toggleFullscreen()" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors">
+                    <i class="fas fa-expand mr-2"></i>全屏模式
+                </button>
+            </div>
+        </div>
+
+        <!-- Chapter Introduction -->
+        <div class="glass-effect p-6 mb-8">
+            <h2 class="section-title">第五章：子图绘制概述</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-semibold mb-3 text-purple-700">🎯 本章学习目标</h3>
+                    <ul class="space-y-2 text-gray-700">
+                        <li><i class="fas fa-check-circle text-green-500 mr-2"></i>掌握matplotlib子图绘制方法</li>
+                        <li><i class="fas fa-check-circle text-green-500 mr-2"></i>学习固定区域和自定义区域子图</li>
+                        <li><i class="fas fa-check-circle text-green-500 mr-2"></i>理解坐标轴共享和布局优化</li>
+                        <li><i class="fas fa-check-circle text-green-500 mr-2"></i>实践多图表综合应用</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-3 text-purple-700">📊 核心技术要点</h3>
+                    <ul class="space-y-2 text-gray-700">
+                        <li><i class="fas fa-code text-blue-500 mr-2"></i>plt.subplot() - 创建单个子图</li>
+                        <li><i class="fas fa-code text-blue-500 mr-2"></i>plt.subplots() - 创建多个子图</li>
+                        <li><i class="fas fa-code text-blue-500 mr-2"></i>sharex/sharey - 坐标轴共享</li>
+                        <li><i class="fas fa-code text-blue-500 mr-2"></i>约束布局和紧密布局优化</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Display Area -->
+        <div id="chartsContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Charts will be dynamically inserted here -->
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="loading-spinner" style="display: none;"></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass-effect mx-4 mb-4 p-6 text-center">
+        <p class="text-gray-600">
+            <i class="fas fa-code mr-2"></i>
+            第五章：子图绘制 - 交互式可视化平台 | 
+            <i class="fas fa-user mr-2"></i>李宛凌 | 
+            <i class="fas fa-id-badge mr-2"></i>022340611 | 
+            <i class="fab fa-github mr-2"></i>
+            <a href="https://github.com/liwanling0402/dierzhang" target="_blank" class="text-blue-600 hover:underline">GitHub仓库</a>
+        </p>
+    </footer>
+
+    <script>
+        // Data Storage
+        const chartData = {
+            products: {
+                title: '产品销售分析',
+                charts: [
+                    {
+                        title: '产品A与产品B销售额对比',
+                        type: 'bar',
+                        data: {
+                            labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                            datasets: [{
+                                label: '产品A销售额',
+                                data: [120, 190, 300, 500, 200, 300],
+                                backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                                borderColor: 'rgba(102, 126, 234, 1)',
+                                borderWidth: 1
+                            }, {
+                                label: '产品B销售额',
+                                data: [220, 180, 280, 350, 420, 380],
+                                backgroundColor: 'rgba(118, 75, 162, 0.8)',
+                                borderColor: 'rgba(118, 75, 162, 1)',
+                                borderWidth: 1
+                            }]
+                        }
+                    },
+                    {
+                        title: '产品销售额趋势分析',
+                        type: 'line',
+                        data: {
+                            labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                            datasets: [{
+                                label: '产品A',
+                                data: [120, 190, 300, 500, 200, 300],
+                                borderColor: 'rgba(102, 126, 234, 1)',
+                                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                                tension: 0.4
+                            }, {
+                                label: '产品B',
+                                data: [220, 180, 280, 350, 420, 380],
+                                borderColor: 'rgba(118, 75, 162, 1)',
+                                backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                                tension: 0.4
+                            }]
+                        }
+                    }
+                ]
+            },
+            pets: {
+                title: '宠物养宠比例分析',
+                charts: [
+                    {
+                        title: '各国养猫养狗人群比例',
+                        type: 'bar',
+                        data: {
+                            labels: ['美国', '英国', '日本', '中国', '德国', '法国'],
+                            datasets: [{
+                                label: '养猫比例',
+                                data: [35, 28, 25, 18, 32, 29],
+                                backgroundColor: 'rgba(255, 99, 132, 0.8)'
+                            }, {
+                                label: '养狗比例',
+                                data: [42, 35, 30, 22, 38, 33],
+                                backgroundColor: 'rgba(54, 162, 235, 0.8)'
+                            }]
+                        }
+                    },
+                    {
+                        title: '养宠类型分布',
+                        type: 'pie',
+                        data: {
+                            labels: ['只养猫', '只养狗', '猫狗都养', '都不养'],
+                            datasets: [{
+                                data: [25, 35, 15, 25],
+                                backgroundColor: [
+                                    'rgba(255, 99, 132, 0.8)',
+                                    'rgba(54, 162, 235, 0.8)',
+                                    'rgba(255, 206, 86, 0.8)',
+                                    'rgba(75, 192, 192, 0.8)'
+                                ]
+                            }]
+                        }
+                    }
+                ]
+            },
+            tiktok: {
+                title: '抖音用户增长分析',
+                charts: [
+                    {
+                        title: '2017-2018年抖音用户增长趋势',
+                        type: 'line',
+                        data: {
+                            labels: ['2017Q1', '2017Q2', '2017Q3', '2017Q4', '2018Q1', '2018Q2', '2018Q3', '2018Q4'],
+                            datasets: [{
+                                label: '用户数(百万)',
+                                data: [20, 50, 120, 200, 350, 500, 800, 1200],
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        }
+                    },
+                    {
+                        title: '抖音用户地区分布',
+                        type: 'doughnut',
+                        data: {
+                            labels: ['一线城市', '二线城市', '三线城市', '四线城市', '海外'],
+                            datasets: [{
+                                data: [25, 35, 20, 15, 5],
+                                backgroundColor: [
+                                    'rgba(102, 126, 234, 0.8)',
+                                    'rgba(118, 75, 162, 0.8)',
+                                    'rgba(240, 147, 251, 0.8)',
+                                    'rgba(245, 87, 108, 0.8)',
+                                    'rgba(255, 206, 86, 0.8)'
+                                ]
+                            }]
+                        }
+                    }
+                ]
+            },
+            weather: {
+                title: '气象数据综合分析',
+                charts: [
+                    {
+                        title: '气温与降水量关系',
+                        type: 'scatter',
+                        data: {
+                            datasets: [{
+                                label: '观测数据点',
+                                data: [
+                                    {x: 15, y: 45}, {x: 18, y: 52}, {x: 22, y: 68}, {x: 25, y: 85},
+                                    {x: 28, y: 92}, {x: 32, y: 78}, {x: 35, y: 65}, {x: 30, y: 88},
+                                    {x: 26, y: 95}, {x: 20, y: 70}, {x: 16, y: 48}, {x: 12, y: 35}
+                                ],
+                                backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                                borderColor: 'rgba(102, 126, 234, 1)'
+                            }]
+                        }
+                    },
+                    {
+                        title: '月度气象指标变化',
+                        type: 'line',
+                        data: {
+                            labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+                            datasets: [{
+                                label: '平均气温(°C)',
+                                data: [5, 8, 12, 18, 23, 28, 32, 31, 26, 20, 14, 7],
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                                yAxisID: 'y'
+                            }, {
+                                label: '降水量(mm)',
+                                data: [45, 52, 68, 85, 92, 78, 65, 70, 88, 95, 70, 48],
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                                yAxisID: 'y1'
+                            }]
+                        }
+                    }
+                ]
+            },
+            cars: {
+                title: '汽车销售市场分析',
+                charts: [
+                    {
+                        title: '2018年上半年汽车销量',
+                        type: 'bar',
+                        data: {
+                            labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                            datasets: [{
+                                label: '轿车销量',
+                                data: [12000, 14500, 18000, 16500, 19000, 21000],
+                                backgroundColor: 'rgba(102, 126, 234, 0.8)'
+                            }, {
+                                label: 'SUV销量',
+                                data: [8500, 9200, 11000, 12800, 14200, 15800],
+                                backgroundColor: 'rgba(118, 75, 162, 0.8)'
+                            }]
+                        }
+                    },
+                    {
+                        title: '品牌市场份额',
+                        type: 'pie',
+                        data: {
+                            labels: ['大众', '丰田', '本田', '日产', '其他'],
+                            datasets: [{
+                                data: [25, 20, 15, 12, 28],
+                                backgroundColor: [
+                                    'rgba(102, 126, 234, 0.8)',
+                                    'rgba(118, 75, 162, 0.8)',
+                                    'rgba(240, 147, 251, 0.8)',
+                                    'rgba(245, 87, 108, 0.8)',
+                                    'rgba(255, 206, 86, 0.8)'
+                                ]
+                            }]
+                        }
+                    }
+                ]
+            }
+        };
+
+        // Chart instances storage
+        let currentCharts = [];
+
+        // Initialize charts on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            renderCharts('products');
+        });
+
+        // Module selection change handler
+        document.getElementById('moduleSelect').addEventListener('change', function() {
+            renderCharts(this.value);
+        });
+
+        // Layout selection change handler
+        document.getElementById('layoutSelect').addEventListener('change', function() {
+            updateLayout(this.value);
+        });
+
+        // Animation selection change handler
+        document.getElementById('animationSelect').addEventListener('change', function() {
+            updateAnimation(this.value);
+        });
+
+        // Render charts for selected module
+        function renderCharts(module) {
+            showLoading();
+            const container = document.getElementById('chartsContainer');
+            const moduleData = chartData[module];
+            
+            // Clear existing charts
+            container.innerHTML = '';
+            currentCharts.forEach(chart => chart.destroy());
+            currentCharts = [];
+
+            // Add module title
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'col-span-full text-center mb-6';
+            titleDiv.innerHTML = `<h2 class="text-2xl font-bold text-purple-700">${moduleData.title}</h2>`;
+            container.appendChild(titleDiv);
+
+            // Create charts
+            setTimeout(() => {
+                moduleData.charts.forEach((chartConfig, index) => {
+                    const chartDiv = document.createElement('div');
+                    chartDiv.className = 'chart-container';
+                    chartDiv.innerHTML = `
+                        <h3 class="text-lg font-semibold mb-4 text-gray-800">${chartConfig.title}</h3>
+                        <canvas id="chart-${index}"></canvas>
+                    `;
+                    container.appendChild(chartDiv);
+
+                    // Create chart
+                    const ctx = document.getElementById(`chart-${index}`).getContext('2d');
+                    const chart = new Chart(ctx, {
+                        type: chartConfig.type,
+                        data: chartConfig.data,
+                        options: getChartOptions(chartConfig.type)
+                    });
+                    currentCharts.push(chart);
+                });
+                hideLoading();
+            }, 500);
+        }
+
+        // Get chart options based on type
+        function getChartOptions(type) {
+            const baseOptions = {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: false
+                    }
+                }
+            };
+
+            if (type === 'line' && currentModule === 'weather') {
+                baseOptions.scales = {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: '气温(°C)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: '降水量(mm)'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        }
+                    }
+                };
+            } else if (type === 'scatter') {
+                baseOptions.scales = {
+                    x: {
+                        title: {
+                            display: true,
+                            text: '气温(°C)'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: '降水量(mm)'
+                        }
+                    }
+                };
+            }
+
+            return baseOptions;
+        }
+
+        // Refresh charts
+        function refreshCharts() {
+            const module = document.getElementById('moduleSelect').value;
+            renderCharts(module);
+        }
+
+        // Export charts
+        function exportCharts() {
+            currentCharts.forEach((chart, index) => {
+                const url = chart.toBase64Image();
+                const link = document.createElement('a');
+                link.download = `chart-${index + 1}.png`;
+                link.href = url;
+                link.click();
+            });
+        }
+
+        // Toggle fullscreen
+        function toggleFullscreen() {
+            const elem = document.getElementById('chartsContainer');
+            if (!document.fullscreenElement) {
+                elem.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Update layout
+        function updateLayout(layout) {
+            const container = document.getElementById('chartsContainer');
+            container.className = '';
+            
+            switch(layout) {
+                case 'grid':
+                    container.className = 'grid grid-cols-1 lg:grid-cols-2 gap-6';
+                    break;
+                case 'flex':
+                    container.className = 'flex flex-wrap gap-6';
+                    break;
+                case 'custom':
+                    container.className = 'grid grid-cols-1 md:grid-cols-3 gap-4';
+                    break;
+            }
+        }
+
+        // Update animation
+        function updateAnimation(animation) {
+            const charts = document.querySelectorAll('.chart-container');
+            charts.forEach(chart => {
+                chart.style.animation = 'none';
+                setTimeout(() => {
+                    switch(animation) {
+                        case 'fade':
+                            chart.style.animation = 'fadeIn 0.5s ease-in';
+                            break;
+                        case 'slide':
+                            chart.style.animation = 'fadeInUp 0.6s ease-out';
+                            break;
+                        case 'bounce':
+                            chart.style.animation = 'bounce 0.6s ease-out';
+                            break;
+                    }
+                }, 10);
+            });
+        }
+
+        // Loading indicator
+        function showLoading() {
+            document.getElementById('loadingIndicator').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingIndicator').style.display = 'none';
+        }
+
+        // Get current module (for chart options)
+        function getCurrentModule() {
+            return document.getElementById('moduleSelect').value;
+        }
+
+        const currentModule = getCurrentModule();
+    </script>
+</body>
+</html>
