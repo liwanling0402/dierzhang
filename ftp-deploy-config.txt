@@ -1,0 +1,140 @@
+# FTP/SFTP 部署配置指南
+
+## 1. 使用 FileZilla 进行手动部署
+
+### 连接信息（请根据您的服务器配置修改）
+```
+主机: your-server.com 或 IP地址
+端口: 21 (FTP) 或 22 (SFTP)
+协议: FTP 或 SFTP
+登录类型: 正常
+用户: your-username
+密码: your-password
+```
+
+### 部署步骤：
+1. 连接到您的服务器
+2. 导航到网站根目录（通常是 public_html、www 或 htdocs）
+3. 创建 chapter8 目录（可选）
+4. 上传以下文件：
+   - chapter8_deploy_optimized.html
+   - （可选）其他静态资源文件
+
+## 2. 使用 lftp 进行自动化部署
+
+创建 deploy.sh 脚本：
+```bash
+#!/bin/bash
+
+# 配置信息
+HOST="your-server.com"
+USER="your-username"
+PASS="your-password"
+REMOTE_DIR="/public_html/chapter8"  # 修改为您的远程目录
+LOCAL_FILE="chapter8_deploy_optimized.html"
+
+# 使用 lftp 上传
+lftp -u $USER,$PASS $HOST <<EOF
+cd $REMOTE_DIR
+put $LOCAL_FILE
+bye
+EOF
+
+echo "部署完成！"
+```
+
+## 3. 使用 rsync 进行增量部署
+
+```bash
+#!/bin/bash
+
+# 配置信息
+REMOTE_USER="your-username"
+REMOTE_HOST="your-server.com"
+REMOTE_DIR="/var/www/html/chapter8"
+LOCAL_FILE="chapter8_deploy_optimized.html"
+
+# 使用 rsync 同步文件
+rsync -avz --progress $LOCAL_FILE $REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/
+
+echo "同步完成！"
+```
+
+## 4. 服务器配置建议
+
+### Apache 服务器 (.htaccess)
+```apache
+# 启用压缩
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+</IfModule>
+
+# 启用缓存
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/x-icon "access plus 1 year"
+</IfModule>
+
+# 安全头
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "DENY"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+```
+
+### Nginx 服务器配置
+```nginx
+server {
+    listen 80;
+    server_name 022340611.xyz;
+    root /var/www/html;
+    index chapter8_deploy_optimized.html;
+
+    # Gzip 压缩
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+
+    # 静态文件缓存
+    location ~* \.(css|js|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # 安全头
+    add_header X-Frame-Options "DENY" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # 访问日志
+    access_log /var/log/nginx/022340611.xyz.access.log;
+    error_log /var/log/nginx/022340611.xyz.error.log;
+}
+```
+
+## 5. 部署验证
+
+部署完成后，访问以下链接验证：
+- https://022340611.xyz/chapter8_deploy_optimized.html
+- https://022340611.xyz/chapter8
+
+## 注意事项
+- 请确保服务器支持HTTPS
+- 建议使用CDN加速静态资源
+- 定期备份网站文件
+- 监控网站访问情况

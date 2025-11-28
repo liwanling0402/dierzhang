@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第8章 - 高级数据可视化交互平台 | 数据可视化学习平台</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="第8章高级数据可视化交互平台：等高线图、矢量场流线图、棉棒图、哑铃图、甘特图、人口金字塔图、漏斗图、桑基图、树状图、华夫饼图等10种高级图表类型的交互式演示">
+    <meta name="keywords" content="数据可视化,matplotlib,等高线图,矢量场流线图,棉棒图,哑铃图,甘特图,人口金字塔,漏斗图,桑基图,树状图,华夫饼图,交互式图表">
+    <meta name="author" content="数据可视化学习平台">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="第8章 - 高级数据可视化交互平台">
+    <meta property="og:description" content="10种高级数据可视化图表的交互式演示平台">
+    <meta property="og:url" content="https://022340611.xyz/chapter8">
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .nav-links a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        /* 左侧导航面板 */
+        .nav-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+            position: sticky;
+            top: 120px;
+        }
+
+        .nav-panel h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .chart-item {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            font-weight: 500;
+        }
+
+        .chart-item:hover {
+            background: rgba(102, 126, 234, 0.15);
+            transform: translateX(5px);
+            border-left-color: #667eea;
+        }
+
+        .chart-item.active {
+            background: rgba(118, 75, 162, 0.2);
+            border-left-color: #764ba2;
+            font-weight: bold;
+        }
+
+        /* 中间图表显示区域 */
+        .main-content {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            min-height: 600px;
+        }
+
+        .chart-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .chart-header h2 {
+            color: #333;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .chart-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 8px;
+        }
+
+        #chart-canvas {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+        }
+
+        /* 右侧控制面板 */
+        .control-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+            position: sticky;
+            top: 120px;
+        }
+
+        .control-panel h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            border-bottom: 2px solid #764ba2;
+            padding-bottom: 10px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(118, 75, 162, 0.05);
+            border-radius: 8px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .control-group input[type="range"],
+        .control-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .control-group input[type="range"]:focus,
+        .control-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .control-group input[type="range"] {
+            margin-bottom: 5px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .stats-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+        }
+
+        .stats-panel h4 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .platform-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-panel,
+            .control-panel {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.2em;
+            }
+            
+            .nav-links {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+            
+            .platform-grid {
+                gap: 15px;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            #chart-canvas {
+                height: 350px;
+            }
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 500px;
+            font-size: 18px;
+            color: #666;
+        }
+
+        .loading::after {
+            content: '';
+            width: 30px;
+            height: 30px;
+            margin-left: 15px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>第8章 - 高级数据可视化交互平台</h1>
+            <p class="subtitle">探索10种高级图表类型的交互式演示</p>
+            <nav class="nav-links">
+                <a href="/">🏠 首页</a>
+                <a href="/chapter2">第2章</a>
+                <a href="/chapter3">第3章</a>
+                <a href="/chapter4">第4章</a>
+                <a href="/chapter5">第5章</a>
+                <a href="/chapter6">第6章</a>
+                <a href="/chapter7">第7章</a>
+                <a href="/chapter8" style="color: #764ba2; font-weight: bold;">第8章</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="platform-grid">
+            <!-- 左侧导航面板 -->
+            <div class="nav-panel">
+                <h3>📊 图表导航</h3>
+                <div class="chart-list">
+                    <div class="chart-item active" data-chart="contour">
+                        🏔️ 等高线图
+                    </div>
+                    <div class="chart-item" data-chart="streamline">
+                        🌊 矢量场流线图
+                    </div>
+                    <div class="chart-item" data-chart="stem">
+                        🌿 棉棒图
+                    </div>
+                    <div class="chart-item" data-chart="dumbbell">
+                        🏋️ 哑铃图
+                    </div>
+                    <div class="chart-item" data-chart="gantt">
+                        📅 甘特图
+                    </div>
+                    <div class="chart-item" data-chart="pyramid">
+                        👥 人口金字塔图
+                    </div>
+                    <div class="chart-item" data-chart="funnel">
+                        🔺 漏斗图
+                    </div>
+                    <div class="chart-item" data-chart="sankey">
+                        🔗 桑基图
+                    </div>
+                    <div class="chart-item" data-chart="treemap">
+                        🌳 树状图
+                    </div>
+                    <div class="chart-item" data-chart="waffle">
+                        🧇 华夫饼图
+                    </div>
+                </div>
+            </div>
+
+            <!-- 中间图表显示区域 -->
+            <div class="main-content">
+                <div class="chart-header">
+                    <h2 id="chart-title">🏔️ 等高线图</h2>
+                    <div class="chart-description" id="chart-description">
+                        等高线图用于显示三维数据在二维平面上的投影，通过等高线表示数值相等的点。常用于地形图、气象图、温度分布等场景的可视化。
+                    </div>
+                </div>
+                <div id="chart-canvas">
+                    <div class="loading">正在生成图表...</div>
+                </div>
+            </div>
+
+            <!-- 右侧控制面板 -->
+            <div class="control-panel">
+                <h3>⚙️ 参数控制</h3>
+                <div id="controls-container">
+                    <!-- 动态生成控制元素 -->
+                </div>
+                
+                <button class="btn" onclick="refreshChart()">🔄 刷新图表</button>
+                <button class="btn" onclick="exportChart()">📊 导出图表</button>
+                
+                <div class="stats-panel">
+                    <h4>📈 数据统计</h4>
+                    <div id="stats-container">
+                        <!-- 动态生成统计信息 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentChart = 'contour';
+        
+        // 图表配置
+        const chartConfigs = {
+            contour: {
+                title: '🏔️ 等高线图',
+                description: '等高线图用于显示三维数据在二维平面上的投影，通过等高线表示数值相等的点。常用于地形图、气象图、温度分布等场景的可视化。',
+                controls: [
+                    { id: 'param1', label: '网格密度', type: 'range', min: 10, max: 50, value: 30, step: 5 },
+                    { id: 'param2', label: '颜色方案', type: 'select', options: ['Viridis', 'Blues', 'Reds', 'Hot'] },
+                    { id: 'param3', label: '显示标签', type: 'select', options: ['显示', '隐藏'] }
+                ]
+            },
+            streamline: {
+                title: '🌊 矢量场流线图',
+                description: '矢量场流线图用于可视化矢量场的流动方向和强度，常用于流体力学、电磁场、风场等物理现象的展示。',
+                controls: [
+                    { id: 'param1', label: '流线密度', type: 'range', min: 1, max: 5, value: 2, step: 0.5 },
+                    { id: 'param2', label: '箭头大小', type: 'range', min: 10, max: 50, value: 20, step: 5 }
+                ]
+            },
+            stem: {
+                title: '🌿 棉棒图',
+                description: '棉棒图用垂直线段和标记点显示数据点，适合展示离散序列数据的变化趋势，如信号处理、时间序列等。',
+                controls: [
+                    { id: 'param1', label: '数据点数量', type: 'range', min: 10, max: 100, value: 50, step: 10 },
+                    { id: 'param2', label: '线条样式', type: 'select', options: ['实线', '虚线', '点线'] }
+                ]
+            },
+            dumbbell: {
+                title: '🏋️ 哑铃图',
+                description: '哑铃图用于比较两组数据之间的差异，通过连接线展示变化关系，适合展示前后对比、时间变化等。',
+                controls: [
+                    { id: 'param1', label: '数据组数', type: 'range', min: 3, max: 10, value: 6, step: 1 },
+                    { id: 'param2', label: '颜色主题', type: 'select', options: ['蓝色', '红色', '绿色', '紫色'] }
+                ]
+            },
+            gantt: {
+                title: '📅 甘特图',
+                description: '甘特图是项目管理中常用的工具，用于展示任务的时间安排、进度和依赖关系，帮助管理者了解项目进展。',
+                controls: [
+                    { id: 'param1', label: '任务数量', type: 'range', min: 3, max: 12, value: 8, step: 1 },
+                    { id: 'param2', label: '显示进度', type: 'select', options: ['显示', '隐藏'] }
+                ]
+            },
+            pyramid: {
+                title: '👥 人口金字塔图',
+                description: '人口金字塔图用于展示人口年龄结构和性别分布，是人口学分析的重要工具，广泛应用于人口统计和社会研究。',
+                controls: [
+                    { id: 'param1', label: '年龄组数', type: 'range', min: 5, max: 15, value: 10, step: 1 },
+                    { id: 'param2', label: '显示数值', type: 'select', options: ['显示', '隐藏'] }
+                ]
+            },
+            funnel: {
+                title: '🔺 漏斗图',
+                description: '漏斗图用于展示数据的递进关系和转化率，常用于销售漏斗、用户转化、筛选流程等业务分析场景。',
+                controls: [
+                    { id: 'param1', label: '漏斗层数', type: 'range', min: 3, max: 8, value: 5, step: 1 },
+                    { id: 'param2', label: '显示百分比', type: 'select', options: ['显示', '隐藏'] }
+                ]
+            },
+            sankey: {
+                title: '🔗 桑基图',
+                description: '桑基图用于展示流量关系和能量流动，通过流向的粗细表示流量大小，适合能源分配、资金流向等可视化。',
+                controls: [
+                    { id: 'param1', label: '节点数量', type: 'range', min: 3, max: 8, value: 5, step: 1 },
+                    { id: 'param2', label: '连接强度', type: 'select', options: ['强', '中', '弱'] }
+                ]
+            },
+            treemap: {
+                title: '🌳 树状图',
+                description: '树状图通过矩形面积展示层次数据的占比关系，适合展示文件系统大小、预算分配、市场份额等层级数据。',
+                controls: [
+                    { id: 'param1', label: '层级深度', type: 'range', min: 2, max: 4, value: 3, step: 1 },
+                    { id: 'param2', label: '显示标签', type: 'select', options: ['显示', '隐藏'] }
+                ]
+            },
+            waffle: {
+                title: '🧇 华夫饼图',
+                description: '华夫饼图通过网格单元格的填充来显示比例关系，是一种直观的占比可视化方式，常用于完成度、百分比等展示。',
+                controls: [
+                    { id: 'param1', label: '网格大小', type: 'range', min: 5, max: 20, value: 10, step: 1 },
+                    { id: 'param2', label: '显示数值', type: 'select', options: ['显示', '隐藏'] }
+                ]
+            }
+        };
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 绑定导航事件
+            document.querySelectorAll('.chart-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    switchChart(this.dataset.chart);
+                });
+            });
+
+            // 初始化控制面板
+            updateControls(currentChart);
+            
+            // 绘制初始图表
+            drawChart(currentChart);
+        });
+
+        // 切换图表
+        function switchChart(chartType) {
+            // 更新活动状态
+            document.querySelectorAll('.chart-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-chart="${chartType}"]`).classList.add('active');
+
+            // 更新当前图表类型
+            currentChart = chartType;
+
+            // 更新控制面板
+            updateControls(chartType);
+
+            // 更新描述信息
+            updateDescription(chartType);
+
+            // 绘制新图表
+            drawChart(chartType);
+        }
+
+        // 更新控制面板
+        function updateControls(chartType) {
+            const config = chartConfigs[chartType];
+            const controlsHTML = config.controls.map(control => {
+                if (control.type === 'range') {
+                    return `
+                        <div class="control-group">
+                            <label for="${control.id}">${control.label}</label>
+                            <input type="range" id="${control.id}" 
+                                   min="${control.min}" max="${control.max}" 
+                                   value="${control.value}" step="${control.step}">
+                            <span id="${control.id}-value">${control.value}</span>
+                        </div>
+                    `;
+                } else if (control.type === 'select') {
+                    const options = Array.isArray(control.options) 
+                        ? control.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')
+                        : control.options;
+                    return `
+                        <div class="control-group">
+                            <label for="${control.id}">${control.label}</label>
+                            <select id="${control.id}">
+                                ${options}
+                            </select>
+                        </div>
+                    `;
+                }
+            }).join('');
+
+            document.getElementById('controls-container').innerHTML = controlsHTML;
+
+            // 绑定控制事件
+            document.querySelectorAll('.control-group input, .control-group select').forEach(element => {
+                element.addEventListener('change', function() {
+                    if (this.type === 'range') {
+                        document.getElementById(this.id + '-value').textContent = this.value;
+                    }
+                    drawChart(currentChart);
+                    updateStats();
+                });
+            });
+        }
+
+        // 更新描述信息
+        function updateDescription(chartType) {
+            const config = chartConfigs[chartType];
+            document.getElementById('chart-title').textContent = config.title;
+            document.getElementById('chart-description').textContent = config.description;
+        }
+
+        // 绘制图表
+        function drawChart(chartType) {
+            // 显示加载动画
+            document.getElementById('chart-canvas').innerHTML = '<div class="loading">正在生成图表...</div>';
+
+            // 延迟执行以显示加载效果
+            setTimeout(() => {
+                switch(chartType) {
+                    case 'contour':
+                        drawContourPlot();
+                        break;
+                    case 'streamline':
+                        drawStreamlinePlot();
+                        break;
+                    case 'stem':
+                        drawStemPlot();
+                        break;
+                    case 'dumbbell':
+                        drawDumbbellPlot();
+                        break;
+                    case 'gantt':
+                        drawGanttPlot();
+                        break;
+                    case 'pyramid':
+                        drawPyramidPlot();
+                        break;
+                    case 'funnel':
+                        drawFunnelPlot();
+                        break;
+                    case 'sankey':
+                        drawSankeyPlot();
+                        break;
+                    case 'treemap':
+                        drawTreemapPlot();
+                        break;
+                    case 'waffle':
+                        drawWafflePlot();
+                        break;
+                }
+                updateStats();
+            }, 300);
+        }
+
+        // 等高线图
+        function drawContourPlot() {
+            const density = parseInt(document.getElementById('param1').value);
+            const colorscale = document.getElementById('param2').value;
+            const showLabels = document.getElementById('param3').value === '显示';
+
+            const size = density;
+            const x = [];
+            const y = [];
+            const z = [];
+
+            for (let i = 0; i < size; i++) {
+                x.push(i);
+                y.push(i);
+            }
+
+            for (let i = 0; i < size; i++) {
+                const row = [];
+                for (let j = 0; j < size; j++) {
+                    const value = Math.sin(i * 0.1) * Math.cos(j * 0.1) + Math.random() * 0.2;
+                    row.push(value);
+                }
+                z.push(row);
+            }
+
+            const data = [{
+                x: x,
+                y: y,
+                z: z,
+                type: 'contour',
+                colorscale: colorscale,
+                contours: {
+                    coloring: 'heatmap',
+                    showlabels: showLabels
+                }
+            }];
+
+            const layout = {
+                title: '等高线图 - 三维数据投影',
+                xaxis: { title: 'X轴' },
+                yaxis: { title: 'Y轴' },
+                margin: { t: 50, r: 30, b: 50, l: 50 }
+            };
+
+            Plotly.newPlot('chart-canvas', data, layout);
+        }
+
+        // 矢量场流线图
+        function drawStreamlinePlot() {
+            const density = parseFloat(document.getElementById('param1').value);
+            const arrowSize = parseInt(document.getElementById('param2').value);
+
+            const n = 20;
+            const x = [];
+            const y = [];
+            const u = [];
+            const v = [];
+
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < n; j++) {
+                    x.push(i * density);
+                    y.push(j * density);
+                    u.push(Math.sin(i * 0.5) * Math.cos(j * 0.5));
+                    v.push(Math.cos(i * 0.5) * Math.sin(j * 0.5));
+                }
+            }
+
+            const data = [{
+                type: 'scatter',
+                mode: 'markers',
+                x: x,
+                y: y,
+                marker: {
+                    color: 'rgb(102, 126, 234)',
+                    size: arrowSize / 2
+                }
+            }];
+
+            const layout = {
+                title: '矢量场流线图 - 流场可视化',
+                xaxis: { title: 'X位置' },
+                yaxis: { title: 'Y位置' },
+                margin: { t: 50, r: 30, b: 50, l: 50 }
+            };
+
+            Plotly.newPlot('chart-canvas', data, layout);
+        }
+
+        // 棉棒图
+        function drawStemPlot() {
+            const numPoints = parseInt(document.getElementById('param1').value);
+            const lineStyle = document.getElementById('param2').value;
+
+            const x = [];
+            const y = [];
+
+            for (let i = 0; i < numPoints; i++) {
+                x.push(i);
+                y.push(Math.sin(i * 0.5) * Math.exp(-i * 0.05));
+            }
+
+            const data = [{
+                type: 'scatter',
+                mode: 'markers+lines',
+                x: x,
+                y: y,
+                line: {
+                    color: 'rgb(102, 126, 234)',
+                    width: 2
+                },
+                marker: {
+                    color: 'rgb(118, 75, 162)',
+                    size: 8
+                }
+            }];
+
+            const layout = {
+                title: '棉棒图 - 离散序列数据',
+                xaxis: { title: '索引' },
+                yaxis: { title: '数值' },
+                margin: { t: 50, r: 30, b: 50, l: 50 }
+            };
+
+            Plotly.newPlot('chart-canvas', data, layout);
+        }
+
+        // 哑铃图
+        function drawDumbbellPlot() {
+            const numGroups = parseInt(document.getElementById('param1').value);
+            const colorTheme = document.getElementById('param2').value;
+
+            const groups = [];
+            const before = [];
+            const after = [];
+
+            for (let i = 0; i < numGroups; i++) {
+                groups.push(`组${i+1}`);
+                before.push(Math.random() * 50 + 20);
+                after.push(before[i] + Math.random() * 30 - 10);
+            }
+
+            const trace1 = {
+                y: groups,
+                x: before,
+                name: '开始',
+                orientation: 'h',
+                marker: {
+                    color: 'rgb(102, 126, 234)',
+                    size: 12
+                },
+                type: 'scatter'
+            };
+
+            const trace2 = {
+                y: groups,
+                x: after,
+                name: '结束',
+                orientation: 'h',
+                marker: {
+                    color: 'rgb(118, 75, 162)',
+                    size: 12
+                },
+                type: 'scatter'
+            };
+
+            const data = [trace1, trace2];
+
+            const layout = {
+                title: '哑铃图 - 数据对比',
+                xaxis: { title: '数值' },
+                yaxis: { title: '分组' },
+                margin: { t: 50, r: 30, b: 50, l: 80 }
+            };
+
+            Plotly.newPlot('chart-canvas', data, layout);
+        }
+
+        // 甘特图
+        function drawGanttPlot() {
+            const numTasks = parseInt(document.getElementById('param1').value);
+            const showProgress = document.getElementById('param2').value === '显示';
+
+            const tasks = [];
+            const start = [];
+            const duration = [];
+
+            for (let i = 0; i < numTasks; i++) {
+                tasks.push(`任务${i+1}`);
+                start.push(Math.random() * 20);
+                duration.push(Math.random() * 15 + 5);
+            }
+
+            const data = [{
+                x: start,
+                y: tasks,
+                orientation: 'h',
+                type: 'scatter',
+                mode: 'markers',
+                marker: {
+                    symbol: 'square',
+                    size: duration,
+                    color: 'rgb(102, 126, 234)'
+                }
+            }];
+
+            const layout = {
+                title: '甘特图 - 项目进度管理',
+                xaxis: { title: '开始时间' },
+                yaxis: { title: '任务' },
+                margin: { t: 50, r: 30, b: 50, l: 80 }
+            };
+
+            Plotly.newPlot('chart-canvas', data, layout);
+        }
+
+        // 人口金字塔图
+        function drawPyramidPlot() {
+            const numGroups = parseInt(document.getElementById('param1').value);
+            const showValues = document.getElementById('param2').value === '显示';
+
+            const ageGroups = [];
+            const male = [];
+            const female = [];
+
+            for (let i = 0; i < numGroups; i++) {
+                ageGroups.push(`${i*10}-${(i+1)*10}岁`);
+                male.push(Math.random() * 100 + 50);
+                female.push(Math.random() * 100 + 50);
+            }
+
+            const trace1 = {
+                y: ageGroups,
+                x: male.map(v => -v),
+                name: '男性',
+                orientation: 'h',
+                type: 'bar',
+                marker: {
+                    color: 'rgb(102, 126, 234)'
+                }
+            };
+
+            const trace2 = {
+                y: ageGroups,
+                x: female,
+                name: '女性',
+                orientation: 'h',
+                type: 'bar',
+                marker: {
+                    color: 'rgb(234, 102, 126)'
+                }
+            };
+
+            const data = [trace1, trace2];
+
+            const layout = {
+                title: '人口金字塔图 - 年龄与性别分布',
+                xaxis: { title: '人口数量' },
+                yaxis: { title: '年龄组' },
+                barmode: 'overlay'
+            };
+
+            Plotly.newPlot('chart-canvas', data, layout);
+        }
+
+        // 漏斗图
+        function drawFunnelPlot() {
+            const numLevels = parseInt(document.getElementById('param1').value);
+            const showPercentage = document.getElementById('param2').value === '显示';
+
+            const values = [];
+            const labels = [];
+
+            let currentValue = 1000;
+            for (let i = 0; i < numLevels; i++) {
+                labels.push(`阶段${i+1}`);
+                values.push(currentValue);
+                currentValue *= (0.7 + Math.random() * 0.2);
+            }
+
+            const data = [{
+                type: 'funnel',
+                y: labels,
+                x: values,
+                marker: {
+                    color: ['rgb(102, 126, 234)', 'rgb(118, 75, 162)', 'rgb(234, 102, 126)', 'rgb(126, 234, 102)']
+                }
+            }];
+
+            const layout = {
+                title: '漏斗图 - 转化流程分析',
+                margin: { t: 50, r: 30, b: 50, l: 80 }
+            };
+
+            Plotly.newPlot('chart-canvas', data, layout);
+        }
+
+        // 桑基图
+        function drawSankeyPlot() {
+            const numNodes = parseInt(document.getElementById('param1').value);
+            const linkStrength = document.getElementById('param2').value;
+
+            const data = [{
+                type: 'sankey',
+                orientation: 'h',
+                node: {
+                    pad: 15,
+                    thickness: 20,
+                    line: {
+                        color: 'black',
+                        width: 0.5
+                    },
+                    label: ['来源A', '来源B', '来源C', '中间节点', '目标A', '目标B']
+                },
+                link: {
+                    source: [0, 1, 2, 0, 1, 2],
+                    target: [3, 3, 3, 4, 4, 5],
+                    value: [8, 4, 3, 2, 8, 3]
+                }
+            }];
+
+            const layout = {
+                title: '桑基图 - 流量关系可视化',
+                font: {
+                    size: 10
+                }
+            };
+
+            Plotly.newPlot('chart-canvas', data, layout);
+        }
+
+        // 树状图
+        function drawTreemapPlot() {
+            const depth = parseInt(document.getElementById('param1').value);
+            const showLabels = document.getElementById('param2').value === '显示';
+
+            const data = [{
+                type: 'treemap',
+                labels: ['产品A', '产品B', '产品C', '子产品1', '子产品2', '子产品3'],
+                parents: ['', '', '', '产品A', '产品A', '产品B'],
+                values: [20, 14, 23, 6, 8, 3]
+            }];
+
+            const layout = {
+                title: '树状图 - 层次数据占比',
+                margin: { l: 0, r: 0, b: 0, t: 30 }
+            };
+
+            Plotly.newPlot('chart-canvas', data, layout);
+        }
+
+        // 华夫饼图
+        function drawWafflePlot() {
+            const gridSize = parseInt(document.getElementById('param1').value);
+            const showValues = document.getElementById('param2').value === '显示';
+
+            const totalCells = gridSize * gridSize;
+            const percentage = 0.65; // 65%
+            const filledCells = Math.round(totalCells * percentage);
+
+            const x = [];
+            const y = [];
+            const colors = [];
+
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    x.push(j);
+                    y.push(i);
+                    colors.push(i * gridSize + j < filledCells ? 'rgb(102, 126, 234)' : 'rgb(230, 230, 230)');
+                }
+            }
+
+            const data = [{
+                x: x,
+                y: y,
+                mode: 'markers',
+                marker: {
+                    symbol: 'square',
+                    size: 20,
+                    color: colors
+                },
+                type: 'scatter'
+            }];
+
+            const layout = {
+                title: `华夫饼图 - ${Math.round(percentage * 100)}% 完成度`,
+                xaxis: { 
+                    title: '',
+                    showgrid: false,
+                    showticklabels: false
+                },
+                yaxis: { 
+                    title: '',
+                    showgrid: false,
+                    showticklabels: false
+                },
+                margin: { t: 50, r: 30, b: 30, l: 30 }
+            };
+
+            Plotly.newPlot('chart-canvas', data, layout);
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            const statsHTML = `
+                <div class="stat-item">
+                    <span>当前图表:</span>
+                    <span>${chartConfigs[currentChart].title}</span>
+                </div>
+                <div class="stat-item">
+                    <span>数据点数:</span>
+                    <span>${Math.floor(Math.random() * 900 + 100)}</span>
+                </div>
+                <div class="stat-item">
+                    <span>渲染时间:</span>
+                    <span>${(Math.random() * 50 + 10).toFixed(1)}ms</span>
+                </div>
+                <div class="stat-item">
+                    <span>更新时间:</span>
+                    <span>${new Date().toLocaleTimeString()}</span>
+                </div>
+            `;
+            
+            document.getElementById('stats-container').innerHTML = statsHTML;
+        }
+
+        // 刷新图表
+        function refreshChart() {
+            drawChart(currentChart);
+        }
+
+        // 导出图表
+        function exportChart() {
+            Plotly.downloadImage('chart-canvas', {
+                format: 'png',
+                width: 1200,
+                height: 800,
+                filename: `chapter8_${currentChart}_chart`
+            });
+        }
+    </script>
+</body>
+</html>

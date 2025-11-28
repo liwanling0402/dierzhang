@@ -1,0 +1,53 @@
+# GitHub Pages 自动部署配置
+name: Deploy Chapter8 to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./
+        keep_files: true
+        destination_dir: chapter8
+        
+    - name: Update main index
+      run: |
+        # 创建或更新主页链接到第8章
+        echo '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>数据可视化学习平台 - 第8章</title>
+    <meta http-equiv="refresh" content="0; url=chapter8/chapter8_deploy_optimized.html">
+</head>
+<body>
+    <p>正在跳转到第8章高级数据可视化平台...</p>
+    <a href="/chapter8/chapter8_deploy_optimized.html">如果页面没有自动跳转，请点击这里</a>
+</body>
+</html>' > index.html
+        
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add index.html
+        git commit -m "Add redirect to Chapter8 platform" || exit 0
+        git push
