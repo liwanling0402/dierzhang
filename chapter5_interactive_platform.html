@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第五章：子图绘制 - 交互式可视化平台</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        
+        .nav-button {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.2);
+        }
+        
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px 0 rgba(31, 38, 135, 0.3);
+        }
+        
+        .nav-button.active {
+            background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+            transform: scale(1.05);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.1);
+        }
+        
+        .control-panel {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.1);
+        }
+        
+        .switch-container {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        
+        .switch-button {
+            background: #e0e0e0;
+            color: #333;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .switch-button.active {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .info-tooltip {
+            background: #333;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            position: absolute;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .info-tooltip.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="glass-effect sticky top-4 mx-4 mt-4 z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-chart-line text-3xl text-purple-600"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">第五章：子图绘制</h1>
+                        <p class="text-sm text-gray-600">交互式数据可视化平台</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleTheme()" class="nav-button">
+                        <i class="fas fa-moon"></i> 主题
+                    </button>
+                    <button onclick="showAbout()" class="nav-button">
+                        <i class="fas fa-info-circle"></i> 关于
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="glass-effect mx-4 mt-4">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex flex-wrap gap-3 justify-center">
+                <button onclick="switchModule('products')" class="nav-button active" id="nav-products">
+                    <i class="fas fa-shopping-cart"></i> 产品销售分析
+                </button>
+                <button onclick="switchModule('pets')" class="nav-button" id="nav-pets">
+                    <i class="fas fa-paw"></i> 宠物养宠比例
+                </button>
+                <button onclick="switchModule('douyin')" class="nav-button" id="nav-douyin">
+                    <i class="fas fa-video"></i> 抖音用户分析
+                </button>
+                <button onclick="switchModule('weather')" class="nav-button" id="nav-weather">
+                    <i class="fas fa-cloud-sun"></i> 气象数据分析
+                </button>
+                <button onclick="switchModule('cars')" class="nav-button" id="nav-cars">
+                    <i class="fas fa-car"></i> 汽车销售分析
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 fade-in">
+            <div class="stats-card">
+                <i class="fas fa-chart-bar text-2xl mb-2"></i>
+                <h3 class="text-lg font-semibold">5+ 图表类型</h3>
+                <p class="text-sm opacity-90">多种可视化方式</p>
+            </div>
+            <div class="stats-card">
+                <i class="fas fa-layer-group text-2xl mb-2"></i>
+                <h3 class="text-lg font-semibold">灵活布局</h3>
+                <p class="text-sm opacity-90">自定义子图排列</p>
+            </div>
+            <div class="stats-card">
+                <i class="fas fa-sync text-2xl mb-2"></i>
+                <h3 class="text-lg font-semibold">实时交互</h3>
+                <p class="text-sm opacity-90">动态数据展示</p>
+            </div>
+            <div class="stats-card">
+                <i class="fas fa-code text-2xl mb-2"></i>
+                <h3 class="text-lg font-semibold">代码示例</h3>
+                <p class="text-sm opacity-90">完整实现参考</p>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel fade-in">
+            <h3 class="text-lg font-semibold mb-4">
+                <i class="fas fa-sliders-h"></i> 控制面板
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">布局模式</label>
+                    <div class="switch-container">
+                        <button onclick="setLayout('grid')" class="switch-button active" id="layout-grid">
+                            <i class="fas fa-th"></i> 网格
+                        </button>
+                        <button onclick="setLayout('flex')" class="switch-button" id="layout-flex">
+                            <i class="fas fa-bars"></i> 流式
+                        </button>
+                        <button onclick="setLayout('custom')" class="switch-button" id="layout-custom">
+                            <i class="fas fa-magic"></i> 自定义
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">数据筛选</label>
+                    <select onchange="filterData(this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="all">全部数据</option>
+                        <option value="recent">近期数据</option>
+                        <option value="top">热门数据</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">动画效果</label>
+                    <div class="switch-container">
+                        <button onclick="toggleAnimation('none')" class="switch-button" id="anim-none">
+                            <i class="fas fa-ban"></i> 无
+                        </button>
+                        <button onclick="toggleAnimation('fade')" class="switch-button active" id="anim-fade">
+                            <i class="fas fa-adjust"></i> 渐变
+                        </button>
+                        <button onclick="toggleAnimation('slide')" class="switch-button" id="anim-slide">
+                            <i class="fas fa-arrows-alt-h"></i> 滑动
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Container -->
+        <div id="charts-container" class="fade-in">
+            <!-- Charts will be dynamically inserted here -->
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass-effect mx-4 mb-4 mt-8">
+        <div class="container mx-auto px-6 py-4">
+            <div class="text-center text-gray-600">
+                <p>基于《Python数据可视化》第五章内容构建 | Powered by Chart.js & Tailwind CSS</p>
+                <div class="flex justify-center space-x-4 mt-2">
+                    <a href="#" class="text-purple-600 hover:text-purple-800">
+                        <i class="fab fa-github"></i> GitHub
+                    </a>
+                    <a href="#" class="text-purple-600 hover:text-purple-800">
+                        <i class="fas fa-book"></i> 教程
+                    </a>
+                    <a href="#" class="text-purple-600 hover:text-purple-800">
+                        <i class="fas fa-envelope"></i> 联系
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Info Tooltip -->
+    <div id="tooltip" class="info-tooltip"></div>
+
+    <script>
+        // Global variables
+        let currentModule = 'products';
+        let currentLayout = 'grid';
+        let currentAnimation = 'fade';
+        let charts = [];
+
+        // Data sets
+        const productData = {
+            months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+            productA: [20, 28, 23, 16, 29, 36, 39, 33, 31, 19, 21, 25],
+            productB: [17, 22, 39, 26, 35, 23, 25, 27, 29, 38, 28, 20]
+        };
+
+        const petsData = {
+            countries: ['中国', '加拿大', '巴西', '澳大利亚', '日本', '墨西哥', '俄罗斯', '韩国', '瑞士', '土耳其', '英国', '美国'],
+            cats: [19, 33, 28, 29, 14, 24, 57, 6, 26, 15, 27, 39],
+            dogs: [25, 33, 58, 39, 15, 64, 29, 23, 22, 11, 27, 50]
+        };
+
+        const douyinData = {
+            cities: ['一线城市', '二线城市', '三线城市', '四线及以外', '其他国家及地区'],
+            growth2017: [21, 35, 22, 19, 3],
+            growth2018: [13, 32, 27, 27, 1],
+            users2017: [21, 35, 22, 19, 3],
+            users2018: [51, 73, 99, 132, 45]
+        };
+
+        const weatherData = {
+            months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+            temperature: [2.0, 2.2, 3.3, 4.5, 6.3, 10.2, 20.3, 33.4, 23.0, 16.5, 12.0, 6.2],
+            precipitation: [2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6, 182.2, 48.7, 18.8, 6.0, 2.3],
+            evaporation: [2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6, 162.2, 32.6, 20.0, 6.4, 3.3]
+        };
+
+        const carsData = {
+            months: ['1月', '2月', '3月', '4月', '5月', '6月'],
+            sales: [2150, 1050, 1560, 1480, 1530, 1490],
+            cities: ['北京', '上海', '广州', '深圳', '浙江', '山东'],
+            salesByCity: [83775, 62860, 59176, 64205, 48671, 39968]
+        };
+
+        // Initialize the application
+        function init() {
+            renderCharts();
+        }
+
+        // Switch between modules
+        function switchModule(module) {
+            currentModule = module;
+            
+            // Update navigation
+            document.querySelectorAll('.nav-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`nav-${module}`).classList.add('active');
+            
+            // Re-render charts
+            destroyCharts();
+            renderCharts();
+        }
+
+        // Set layout mode
+        function setLayout(layout) {
+            currentLayout = layout;
+            
+            // Update layout buttons
+            document.querySelectorAll('.switch-button').forEach(btn => {
+                if (btn.id && btn.id.startsWith('layout-')) {
+                    btn.classList.remove('active');
+                }
+            });
+            document.getElementById(`layout-${layout}`).classList.add('active');
+            
+            // Re-render charts
+            destroyCharts();
+            renderCharts();
+        }
+
+        // Toggle animation
+        function toggleAnimation(anim) {
+            currentAnimation = anim;
+            
+            // Update animation buttons
+            document.querySelectorAll('.switch-button').forEach(btn => {
+                if (btn.id && btn.id.startsWith('anim-')) {
+                    btn.classList.remove('active');
+                }
+            });
+            document.getElementById(`anim-${anim}`).classList.add('active');
+        }
+
+        // Filter data
+        function filterData(filter) {
+            destroyCharts();
+            renderCharts(filter);
+        }
+
+        // Destroy existing charts
+        function destroyCharts() {
+            charts.forEach(chart => {
+                if (chart) chart.destroy();
+            });
+            charts = [];
+        }
+
+        // Render charts based on current module
+        function renderCharts(filter = 'all') {
+            const container = document.getElementById('charts-container');
+            container.innerHTML = '';
+            
+            switch (currentModule) {
+                case 'products':
+                    renderProductCharts(container);
+                    break;
+                case 'pets':
+                    renderPetsCharts(container);
+                    break;
+                case 'douyin':
+                    renderDouyinCharts(container);
+                    break;
+                case 'weather':
+                    renderWeatherCharts(container);
+                    break;
+                case 'cars':
+                    renderCarsCharts(container);
+                    break;
+            }
+        }
+
+        // Render product charts
+        function renderProductCharts(container) {
+            const layoutClass = getLayoutClass();
+            
+            container.innerHTML = `
+                <div class="${layoutClass}">
+                    <div class="chart-container">
+                        <canvas id="product-line-chart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="product-pie-a-chart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="product-pie-b-chart"></canvas>
+                    </div>
+                </div>
+            `;
+            
+            // Line chart for product comparison
+            const lineCtx = document.getElementById('product-line-chart').getContext('2d');
+            charts.push(new Chart(lineCtx, {
+                type: 'line',
+                data: {
+                    labels: productData.months,
+                    datasets: [{
+                        label: '产品A销售额(亿元)',
+                        data: productData.productA,
+                        borderColor: '#FF6384',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 2
+                    }, {
+                        label: '产品B销售额(亿元)',
+                        data: productData.productB,
+                        borderColor: '#36A2EB',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '产品A与产品B的销售额月度对比',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '销售额(亿元)'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: currentAnimation === 'none' ? 0 : 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            }));
+            
+            // Pie chart for product A
+            const pieACtx = document.getElementById('product-pie-a-chart').getContext('2d');
+            charts.push(new Chart(pieACtx, {
+                type: 'doughnut',
+                data: {
+                    labels: productData.months,
+                    datasets: [{
+                        data: productData.productA,
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40',
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '产品A销售额分布',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            position: 'right'
+                        }
+                    },
+                    animation: {
+                        duration: currentAnimation === 'none' ? 0 : 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            }));
+            
+            // Pie chart for product B
+            const pieBCtx = document.getElementById('product-pie-b-chart').getContext('2d');
+            charts.push(new Chart(pieBCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: productData.months,
+                    datasets: [{
+                        data: productData.productB,
+                        backgroundColor: [
+                            '#36A2EB', '#FF6384', '#4BC0C0', '#FFCE56', '#9966FF', '#FF9F40',
+                            '#36A2EB', '#FF6384', '#4BC0C0', '#FFCE56', '#9966FF', '#FF9F40'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '产品B销售额分布',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            position: 'right'
+                        }
+                    },
+                    animation: {
+                        duration: currentAnimation === 'none' ? 0 : 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            }));
+        }
+
+        // Render pets charts
+        function renderPetsCharts(container) {
+            const layoutClass = getLayoutClass();
+            
+            container.innerHTML = `
+                <div class="${layoutClass}">
+                    <div class="chart-container">
+                        <canvas id="pets-cats-chart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="pets-dogs-chart"></canvas>
+                    </div>
+                </div>
+            `;
+            
+            // Horizontal bar chart for cats
+            const catsCtx = document.getElementById('pets-cats-chart').getContext('2d');
+            charts.push(new Chart(catsCtx, {
+                type: 'bar',
+                data: {
+                    labels: petsData.countries,
+                    datasets: [{
+                        label: '养猫人群比例(%)',
+                        data: petsData.cats,
+                        backgroundColor: '#FFA500',
+                        borderColor: '#FF8C00',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '部分国家养猫人群的比例',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '人群比例(%)'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: currentAnimation === 'none' ? 0 : 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            }));
+            
+            // Horizontal bar chart for dogs
+            const dogsCtx = document.getElementById('pets-dogs-chart').getContext('2d');
+            charts.push(new Chart(dogsCtx, {
+                type: 'bar',
+                data: {
+                    labels: petsData.countries,
+                    datasets: [{
+                        label: '养狗人群比例(%)',
+                        data: petsData.dogs,
+                        backgroundColor: '#20B2AA',
+                        borderColor: '#008B8B',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '部分国家养狗人群的比例',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '人群比例(%)'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: currentAnimation === 'none' ? 0 : 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            }));
+        }
+
+        // Render Douyin charts
+        function renderDouyinCharts(container) {
+            const layoutClass = getLayoutClass();
+            
+            container.innerHTML = `
+                <div class="${layoutClass}">
+                    <div class="chart-container">
+                        <canvas id="douyin-growth-chart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="douyin-pie-2017-chart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="douyin-pie-2018-chart"></canvas>
+                    </div>
+                </div>
+            `;
+            
+            // Bar chart for growth comparison
+            const growthCtx = document.getElementById('douyin-growth-chart').getContext('2d');
+            charts.push(new Chart(growthCtx, {
+                type: 'bar',
+                data: {
+                    labels: douyinData.cities,
+                    datasets: [{
+                        label: '2017年抖音用户增长倍数',
+                        data: douyinData.growth2017,
+                        backgroundColor: '#20B2AA',
+                        borderColor: '#008B8B',
+                        borderWidth: 1
+                    }, {
+                        label: '2018年抖音用户增长倍数',
+                        data: douyinData.growth2018,
+                        backgroundColor: '#36A2EB',
+                        borderColor: '#1E90FF',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '抖音2018vs2017人群增长倍数',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '增长倍数'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: currentAnimation === 'none' ? 0 : 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            }));
+            
+            // Pie chart for 2017
+            const pie2017Ctx = document.getElementById('douyin-pie-2017-chart').getContext('2d');
+            charts.push(new Chart(pie2017Ctx, {
+                type: 'pie',
+                data: {
+                    labels: douyinData.cities,
+                    datasets: [{
+                        data: douyinData.growth2017,
+                        backgroundColor: [
+                            '#2F4F4F', '#FF0000', '#A9A9A9', '#FFD700', '#B0C4DE'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '2017年抖音用户地区分布的比例',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            position: 'right'
+                        }
+                    },
+                    animation: {
+                        duration: currentAnimation === 'none' ? 0 : 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            }));
+            
+            // Pie chart for 2018
+            const pie2018Ctx = document.getElementById('douyin-pie-2018-chart').getContext('2d');
+            charts.push(new Chart(pie2018Ctx, {
+                type: 'pie',
+                data: {
+                    labels: douyinData.cities,
+                    datasets: [{
+                        data: douyinData.growth2018,
+                        backgroundColor: [
+                            '#2F4F4F', '#FF0000', '#A9A9A9', '#FFD700', '#B0C4DE'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '2018年抖音用户地区分布的比例',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            position: 'right'
+                        }
+                    },
+                    animation: {
+                        duration: currentAnimation === 'none' ? 0 : 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            }));
+        }
+
+        // Render weather charts
+        function renderWeatherCharts(container) {
+            const layoutClass = getLayoutClass();
+            
+            container.innerHTML = `
+                <div class="${layoutClass}">
+                    <div class="chart-container">
+                        <canvas id="weather-combined-chart"></canvas>
+                    </div>
+                </div>
+            `;
+            
+            // Combined chart with stacked bar and line
+            const combinedCtx = document.getElementById('weather-combined-chart').getContext('2d');
+            charts.push(new Chart(combinedCtx, {
+                type: 'bar',
+                data: {
+                    labels: weatherData.months,
+                    datasets: [
+                        {
+                            label: '蒸发量(ml)',
+                            data: weatherData.evaporation,
+                            backgroundColor: 'orange',
+                            borderColor: '#FF8C00',
+                            borderWidth: 1
+                        },
+                        {
+                            label: '降水量(ml)',
+                            data: weatherData.precipitation,
+                            backgroundColor: 'green',
+                            borderColor: '#228B22',
+                            borderWidth: 1
+                        },
+                        {
+                            label: '平均气温(°C)',
+                            data: weatherData.temperature,
+                            type: 'line',
+                            borderColor: '#FF1493',
+                            backgroundColor: 'rgba(255, 20, 147, 0.1)',
+                            borderWidth: 2,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '平均气温与降水量、蒸发量的关系',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true
+                        },
+                        y: {
+                            stacked: true,
+                            title: {
+                                display: true,
+                                text: '水量(ml)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: '气温(°C)'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: currentAnimation === 'none' ? 0 : 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            }));
+        }
+
+        // Render cars charts
+        function renderCarsCharts(container) {
+            const layoutClass = getLayoutClass();
+            
+            container.innerHTML = `
+                <div class="${layoutClass}">
+                    <div class="chart-container">
+                        <canvas id="cars-sales-chart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="cars-city-chart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="cars-area-chart"></canvas>
+                    </div>
+                </div>
+            `;
+            
+            // Bar chart for monthly sales
+            const salesCtx = document.getElementById('cars-sales-chart').getContext('2d');
+            charts.push(new Chart(salesCtx, {
+                type: 'bar',
+                data: {
+                    labels: carsData.months,
+                    datasets: [{
+                        label: '销售额(亿元)',
+                        data: carsData.sales,
+                        backgroundColor: '#3299CC',
+                        borderColor: '#2E8BC0',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '2018年上半年某品牌汽车的销售额',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '销售额(亿元)'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: currentAnimation === 'none' ? 0 : 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            }));
+            
+            // Line chart for city sales
+            const cityCtx = document.getElementById('cars-city-chart').getContext('2d');
+            charts.push(new Chart(cityCtx, {
+                type: 'line',
+                data: {
+                    labels: carsData.cities,
+                    datasets: [{
+                        label: '销量(辆)',
+                        data: carsData.salesByCity,
+                        borderColor: '#FF1493',
+                        backgroundColor: 'rgba(255, 20, 147, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '分公司某品牌汽车的销量',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '销量(辆)'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: currentAnimation === 'none' ? 0 : 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            }));
+            
+            // Area chart for city sales
+            const areaCtx = document.getElementById('cars-area-chart').getContext('2d');
+            charts.push(new Chart(areaCtx, {
+                type: 'line',
+                data: {
+                    labels: carsData.cities,
+                    datasets: [{
+                        label: '销量(辆)',
+                        data: carsData.salesByCity,
+                        borderColor: '#9999FF',
+                        backgroundColor: 'rgba(153, 153, 255, 0.3)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '分公司某品牌汽车的销量(面积图)',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '销量(辆)'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: currentAnimation === 'none' ? 0 : 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            }));
+        }
+
+        // Get layout class based on current layout
+        function getLayoutClass() {
+            switch (currentLayout) {
+                case 'grid':
+                    return 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+                case 'flex':
+                    return 'flex flex-col space-y-4';
+                case 'custom':
+                    return 'grid grid-cols-1 lg:grid-cols-3 gap-4';
+                default:
+                    return 'grid grid-cols-1 md:grid-cols-2 gap-4';
+            }
+        }
+
+        // Toggle theme (placeholder function)
+        function toggleTheme() {
+            alert('主题切换功能开发中...');
+        }
+
+        // Show about information
+        function showAbout() {
+            alert('第五章：子图绘制\n\n本平台基于《Python数据可视化》第五章内容构建，展示了多种子图绘制技术和交互式数据可视化方法。\n\n主要功能：\n• 产品销售分析\n• 宠物养宠比例分析\n• 抖音用户增长分析\n• 气象数据可视化\n• 汽车销售数据分析\n\n技术栈：Chart.js + Tailwind CSS');
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
