@@ -3,480 +3,306 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>数据可视化交互式平台 - 第2、3、4章集成</title>
-    <meta name="description" content="基于matplotlib的数据可视化交互式学习平台，集成第2、3、4章内容，包含折线图、柱形图、三角函数、箱形图、散点图等多种图表类型和样式优化技术">
+    <title>数据可视化交互式学习平台</title>
+    <meta name="description" content="基于matplotlib的完整数据可视化学习平台，涵盖第2、3、4、5章内容">
+    <meta name="author" content="李宛凌 | 学号：022340611">
+    
+    <link rel="icon" type="image/x-icon" href="https://022340611.xyz/favicon.ico">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        /* 全局色彩变量定义 - 符合色彩使用规则 */
-        :root {
-            /* 主色 - 应用于标题、按钮、图表主系列 (占比≤20%) */
-            --primary-color: #1E40AF;
-            
-            /* 强调色 - 应用于核心指标、选中状态、标注图标 (占比≤5%) */
-            --accent-color: #D4AF37;
-            
-            /* 背景色 */
-            --bg-color-light: #F8F9FA;  /* 页面底色 */
-            --bg-color-card: #E9ECEF;  /* 卡片底色 */
-            --bg-color-divider: #DEE2E6; /* 分割线 */
-            
-            /* 文字色 */
-            --text-color-dark: #212529;  /* 标题 */
-            --text-color-medium: #495057; /* 正文 */
-            --text-color-light: #6C757D; /* 辅助说明 */
-            
-            /* 警示色 */
-            --alert-red: #DC3545;  /* 仅用于数据状态，不用于装饰 */
-            --alert-yellow: #FFC107;
-            --alert-green: #28A745;
-            
-            /* 支持深色模式 */
-            --dark-bg-color: #1a1d23;
-            --dark-card-color: #2d3748;
-            --dark-text-color: #e2e8f0;
-        }
-        
-        /* 深色模式变量 */
-        [data-theme="dark"] {
-            --primary-color: #3B82F6;
-            --accent-color: #F59E0B;
-            --bg-color-light: var(--dark-bg-color);
-            --bg-color-card: var(--dark-card-color);
-            --bg-color-divider: #4a5568;
-            --text-color-dark: var(--dark-text-color);
-            --text-color-medium: #cbd5e0;
-            --text-color-light: #a0aec0;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: 'Microsoft YaHei', 'SimHei', sans-serif;
-            background: var(--bg-color-light);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            color: var(--text-color-medium);
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 50px;
-            background: var(--bg-color-card);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            border: 1px solid var(--bg-color-divider);
-        }
-        
-        .header h1 {
-            font-size: 2.5em;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-            font-weight: 700;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        .header p {
-            font-size: 1.2em;
-            color: var(--text-color-medium);
-            line-height: 1.6;
-        }
-        
-        .platform-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 30px;
-            margin-bottom: 50px;
-        }
-        
-        .platform-card {
-            background: var(--bg-color-card);
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-            border: 1px solid var(--bg-color-divider);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-            cursor: pointer;
             position: relative;
         }
         
-        .platform-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-            border-color: var(--primary-color);
-        }
-        
-        .platform-card::before {
+        body::before {
             content: '';
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            height: 3px;
-            background: var(--primary-color);
-            border-radius: 15px 15px 0 0;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+            background-size: cover;
+            z-index: -1;
         }
         
-        .platform-card:hover::before {
-            opacity: 1;
-        }
-        
-        .platform-icon {
-            font-size: 3em;
-            margin-bottom: 20px;
-            color: var(--primary-color);
-        }
-        
-        .platform-card h3 {
-            font-size: 1.5em;
-            color: var(--text-color-dark);
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-        
-        .platform-card p {
-            color: var(--text-color-medium);
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-        
-        .btn {
-            display: inline-block;
-            padding: 12px 30px;
-            background: var(--primary-color);
-            color: white;
-            text-decoration: none;
-            border-radius: 25px;
-            font-weight: 600;
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
             transition: all 0.3s ease;
-            border: 2px solid transparent;
+        }
+        
+        .glass-effect:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.45);
+        }
+        
+        .chapter-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
             position: relative;
             overflow: hidden;
         }
         
-        .btn:hover {
-            background: #1a3a8f;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+        .chapter-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
         }
         
-        .features {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 40px;
-            margin-bottom: 50px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        .chapter-card:hover::before {
+            left: 100%;
         }
         
-        .features h2 {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #2c3e50;
+        .chapter-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
         }
         
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+        .floating-icon {
+            animation: float 3s ease-in-out infinite;
         }
         
-        .feature-item {
-            text-align: center;
-            padding: 20px;
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
         }
         
-        .feature-icon {
-            font-size: 2.5em;
-            margin-bottom: 15px;
-            color: #667eea;
+        .fade-in {
+            animation: fadeIn 0.8s ease-out;
         }
         
-        .footer {
-            text-align: center;
-            padding: 20px;
-            color: var(--text-color-light);
-            font-size: 0.9em;
-            border-top: 1px solid var(--bg-color-divider);
-            margin-top: 40px;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2em;
-            }
-            
-            .platform-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .container {
-                padding: 20px 10px;
-            }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 数据可视化交互式平台</h1>
-            <p>基于matplotlib的完整学习平台，集成第2、3、4章内容，探索数据可视化的艺术之美</p>
+    <!-- Header -->
+    <header class="glass-effect sticky top-4 z-50 mx-4 mt-4 p-6">
+        <div class="container mx-auto text-center">
+            <h1 class="text-4xl md:text-5xl font-bold gradient-text mb-4">
+                <i class="fas fa-chart-line mr-4 floating-icon"></i>
+                数据可视化交互式学习平台
+            </h1>
+            <p class="text-xl text-gray-600 mb-2">基于matplotlib的完整学习体系</p>
+            <p class="text-gray-500">李宛凌 | 学号：022340611</p>
         </div>
-        
-        <div class="platform-grid">
-            <div class="platform-card" onclick="openChapter('chapter2_interactive.html')">
-                <div class="platform-icon">📈</div>
-                <h3>第2章：折线图与柱形图</h3>
-                <p>掌握基础图表绘制技术，包括折线图、柱形图及其应用场景</p>
-                <a href="chapter2_interactive.html" target="_blank" class="btn">进入平台</a>
-            </div>
-            
-            <div class="platform-card" onclick="openChapter('chapter3_interactive.html')">
-                <div class="platform-icon">📊</div>
-                <h3>第3章：多种图表类型</h3>
-                <p>学习更多图表类型，包括三角函数、箱形图、散点图等高级可视化</p>
-                <a href="chapter3_interactive.html" target="_blank" class="btn">进入平台</a>
-            </div>
-            
-            <div class="platform-card" onclick="openChapter('chapter4_optimized_interactive_platform.html')">
-                <div class="platform-icon">🎨</div>
-                <h3>第4章：图表样式优化</h3>
-                <p>探索图表样式优化技术，包括颜色、线型、字体、主题等高级功能</p>
-                <a href="chapter4_optimized_interactive_platform.html" target="_blank" class="btn">进入平台</a>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Introduction -->
+        <div class="glass-effect p-8 mb-12 fade-in">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold gradient-text mb-6">
+                    <i class="fas fa-book-open mr-3"></i>
+                    课程章节概览
+                </h2>
+                <p class="text-lg text-gray-700 max-w-3xl mx-auto">
+                    欢迎来到数据可视化交互式学习平台！本平台涵盖了matplotlib数据可视化的核心内容，
+                    从基础图表绘制到高级样式优化，每个章节都配备完整的交互式实例，
+                    帮助您深入理解数据可视化的艺术与技术。
+                </p>
             </div>
         </div>
-        
-        <div class="features">
-            <h2>🌟 平台特色功能</h2>
-            <div class="feature-grid">
-                <div class="feature-item">
-                    <div class="feature-icon">📈</div>
-                    <h4>第2章核心功能</h4>
-                    <p>基础图表绘制、折线图应用、柱形图对比、气温走势分析</p>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon">📊</div>
-                    <h4>第3章核心功能</h4>
-                    <p>多种图表类型、三角函数演示、电影票房分析、交互式控制</p>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon">🎨</div>
-                    <h4>第4章核心功能</h4>
-                    <p>颜色应用、线型选择、字体设置、主题风格、区域填充</p>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon">🚀</div>
-                    <h4>统一交互体验</h4>
-                    <p>响应式设计、深色模式、键盘快捷键、实时参数调整</p>
+
+        <!-- Chapter Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+            <!-- Chapter 2 -->
+            <div class="chapter-card fade-in" onclick="window.location.href='chapter2_interactive.html'">
+                <div class="text-center">
+                    <div class="text-5xl mb-4 text-blue-600">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3 gradient-text">第2章：折线图与柱形图基础</h3>
+                    <p class="text-gray-600 mb-4">
+                        学习matplotlib中的基础图表绘制方法，掌握折线图和柱形图的创建技巧，
+                        包括数据准备、图表样式设置和基础交互功能。
+                    </p>
+                    <ul class="text-sm text-gray-500 text-left space-y-1">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>折线图绘制基础</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>柱形图创建与应用</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>图表样式与颜色设置</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>交互式参数调整</li>
+                    </ul>
                 </div>
             </div>
-        </div>
-        
-        <div class="features">
-            <h2>📚 学习内容概览</h2>
-            <div style="text-align: center; line-height: 1.8; font-size: 1.1em;">
-                <h3>第2章：基础图表绘制</h3>
-                <p>✅ <strong>折线图基础</strong> - 数据变化趋势可视化</p>
-                <p>✅ <strong>柱形图应用</strong> - 分类数据比较展示</p>
-                <p>✅ <strong>气温走势图</strong> - 双线图实时分析</p>
-                <p>✅ <strong>电影票房排行</strong> - 柱形图数据展示</p>
-                
-                <h3>第3章：多种图表类型</h3>
-                <p>✅ <strong>三角函数图</strong> - 正弦余弦函数展示</p>
-                <p>✅ <strong>箱形图分析</strong> - 数据分布统计</p>
-                <p>✅ <strong>散点分布图</strong> - 多变量关系探索</p>
-                <p>✅ <strong>实时动态图表</strong> - 交互式数据生成</p>
-                
-                <h3>第4章：样式优化技术</h3>
-                <p>✅ <strong>颜色应用</strong> - 渐变效果和映射表</p>
-                <p>✅ <strong>线型选择</strong> - 多线型对比分析</p>
-                <p>✅ <strong>字体设置</strong> - 中文字体和文本样式</p>
-                <p>✅ <strong>区域填充</strong> - 曲线间填充技术</p>
+
+            <!-- Chapter 3 -->
+            <div class="chapter-card fade-in" onclick="window.location.href='chapter3_interactive.html'">
+                <div class="text-center">
+                    <div class="text-5xl mb-4 text-green-600">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3 gradient-text">第3章：多种图表类型应用</h3>
+                    <p class="text-gray-600 mb-4">
+                        深入探索matplotlib的丰富图表类型，学习饼图、箱形图、散点图等
+                        多样化可视化方法，提升数据表现力。
+                    </p>
+                    <ul class="text-sm text-gray-500 text-left space-y-1">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>饼图与环形图绘制</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>箱形图统计分析</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>散点图与气泡图</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>三角函数图表绘制</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Chapter 4 -->
+            <div class="chapter-card fade-in" onclick="window.location.href='chapter4_optimized_interactive_platform.html'">
+                <div class="text-center">
+                    <div class="text-5xl mb-4 text-purple-600">
+                        <i class="fas fa-palette"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3 gradient-text">第4章：图表样式优化</h3>
+                    <p class="text-gray-600 mb-4">
+                        掌握matplotlib的高级样式设置技巧，学习颜色、线型、字体、主题等
+                        优化方法，打造专业的数据可视化效果。
+                    </p>
+                    <ul class="text-sm text-gray-500 text-left space-y-1">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>颜色体系与配色方案</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>线型与标记自定义</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>字体设置与文字布局</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>主题模板设计</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Chapter 5 -->
+            <div class="chapter-card fade-in" onclick="window.location.href='chapter5_interactive.html'">
+                <div class="text-center">
+                    <div class="text-5xl mb-4 text-red-600">
+                        <i class="fas fa-th"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3 gradient-text">第5章：子图绘制技术</h3>
+                    <p class="text-gray-600 mb-4">
+                        学习matplotlib的子图绘制方法，掌握多图表布局技巧，
+                        实现复杂的数据可视化面板设计。
+                    </p>
+                    <ul class="text-sm text-gray-500 text-left space-y-1">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>固定区域子图创建</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>自定义布局设计</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>坐标轴共享技术</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>布局优化与调整</li>
+                    </ul>
+                </div>
             </div>
         </div>
-        
-        <div class="platform-grid">
-            <div class="platform-card" onclick="window.open('https://github.com/liwanling0402/datavis24', '_blank')">
-                <div class="platform-icon">📁</div>
-                <h3>GitHub仓库</h3>
-                <p>查看源代码、贡献代码或fork项目到自己的仓库进行定制开发</p>
-                <a href="https://github.com/liwanling0402/datavis24" target="_blank" class="btn">访问仓库</a>
+
+        <!-- Features Section -->
+        <div class="glass-effect p-8 mt-12">
+            <h2 class="text-3xl font-bold text-center gradient-text mb-8">
+                <i class="fas fa-star mr-3"></i>
+                平台特色功能
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="text-4xl mb-4 text-blue-500">
+                        <i class="fas fa-mouse-pointer"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">交互式体验</h3>
+                    <p class="text-gray-600">实时参数调整，动态图表更新，直观学习效果</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl mb-4 text-green-500">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">响应式设计</h3>
+                    <p class="text-gray-600">适配各种设备，随时随地学习数据可视化</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl mb-4 text-purple-500">
+                        <i class="fas fa-code-branch"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">开源代码</h3>
+                    <p class="text-gray-600">GitHub开源项目，支持学习与二次开发</p>
+                </div>
             </div>
         </div>
-    </div>
-    
-    <div class="footer">
-        <p>© 2024 数据可视化项目 | 作者：李宛凌 | 学号：022340611 | 第2、3、4章集成平台</p>
-    </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass-effect mx-4 mb-4 p-6 text-center">
+        <p class="text-gray-600 mb-2">
+            <i class="fas fa-graduation-cap mr-2"></i>
+            数据可视化交互式学习平台 | 
+            <i class="fas fa-user mr-2"></i>李宛凌 | 
+            <i class="fas fa-id-badge mr-2"></i>022340611
+        </p>
+        <p class="text-gray-500">
+            <i class="fab fa-github mr-2"></i>
+            <a href="https://github.com/liwanling0402/dierzhang" target="_blank" class="text-blue-600 hover:underline">
+                GitHub仓库
+            </a>
+            <span class="mx-2">|</span>
+            <i class="fas fa-globe mr-2"></i>
+            <a href="https://022340611.xyz" target="_blank" class="text-blue-600 hover:underline">
+                官方网站
+            </a>
+        </p>
+    </footer>
 
     <script>
-        // 主题切换功能
-        function toggleTheme() {
-            const html = document.documentElement;
-            const currentTheme = html.getAttribute('data-theme');
-            
-            if (currentTheme === 'dark') {
-                html.setAttribute('data-theme', 'light');
-                localStorage.setItem('theme', 'light');
-            } else {
-                html.setAttribute('data-theme', 'dark');
-                localStorage.setItem('theme', 'dark');
-            }
-            
-            updateThemeButton();
-        }
-        
-        // 更新主题切换按钮
-        function updateThemeButton() {
-            const theme = document.documentElement.getAttribute('data-theme');
-            const themeButton = document.querySelector('.theme-toggle');
-            if (themeButton) {
-                themeButton.textContent = theme === 'dark' ? '☀️ 浅色主题' : '🌙 深色主题';
-            }
-        }
-        
-        // 应用存储的主题设置
-        function applySavedTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            updateThemeButton();
-        }
-        
-        // 处理章节平台打开逻辑
-        function openChapter(url) {
-            // 检查文件是否存在，如果不存在则显示提示
-            fetch(url, { method: 'HEAD' })
-                .then(response => {
-                    if (response.ok) {
-                        window.open(url, '_blank');
-                    } else {
-                        showNotification('该章节平台文件不存在或无法访问。请确保所有文件已正确上传到GitHub仓库。', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('文件检查失败:', error);
-                    // 仍然尝试打开，让浏览器处理错误
-                    window.open(url, '_blank');
-                });
-        }
-        
-        // 显示通知消息
-        function showNotification(message, type = 'info') {
-            // 创建通知元素
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.innerHTML = `
-                <div class="notification-content">
-                    <span class="notification-icon">${type === 'error' ? '❌' : 'ℹ️'}</span>
-                    <span class="notification-text">${message}</span>
-                    <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
-                </div>
-            `;
-            
-            // 添加样式
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${type === 'error' ? 'var(--alert-red)' : 'var(--primary-color)'};
-                color: white;
-                padding: 15px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                z-index: 1000;
-                max-width: 400px;
-                animation: slideInRight 0.3s ease;
-                border-left: 4px solid ${type === 'error' ? '#c82333' : '#1a3a8f'};
-            `;
-            
-            // 添加动画样式
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes slideInRight {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-                
-                .notification-content {
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                }
-                
-                .notification-close {
-                    background: none;
-                    border: none;
-                    color: white;
-                    font-size: 18px;
-                    cursor: pointer;
-                    padding: 0;
-                    width: 20px;
-                    height: 20px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-            `;
-            
-            document.head.appendChild(style);
-            document.body.appendChild(notification);
-            
-            // 自动移除通知
-            setTimeout(() => {
-                if (notification.parentElement) {
-                    notification.style.animation = 'slideOutRight 0.3s ease';
-                    setTimeout(() => notification.remove(), 300);
-                }
-            }, 5000);
-        }
+        // Add fade-in animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
 
-        // 页面加载时检查文件状态
-        document.addEventListener('DOMContentLoaded', function() {
-            applySavedTheme();
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+            observer.observe(el);
+        });
+
+        // Add interactive hover effects
+        document.querySelectorAll('.chapter-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.background = 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))';
+            });
             
-            const chapterFiles = [
-                'chapter2_interactive.html',
-                'chapter3_interactive.html', 
-                'chapter4_optimized_interactive_platform.html'
-            ];
-            
-            // 添加主题切换按钮
-            const header = document.querySelector('.header');
-            if (header && !document.querySelector('.theme-toggle')) {
-                const themeButton = document.createElement('button');
-                themeButton.className = 'theme-toggle';
-                themeButton.innerHTML = '🌙 深色主题';
-                themeButton.style.cssText = `
-                    position: absolute;
-                    top: 20px;
-                    right: 20px;
-                    background: var(--primary-color);
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 20px;
-                    cursor: pointer;
-                    font-size: 14px;
-                    font-weight: 500;
-                    transition: all 0.3s ease;
-                `;
-                themeButton.onclick = toggleTheme;
-                header.style.position = 'relative';
-                header.appendChild(themeButton);
-            }
-            
-            console.log('数据可视化平台已加载，包含第2、3、4章内容');
+            card.addEventListener('mouseleave', function() {
+                this.style.background = 'rgba(255, 255, 255, 0.9)';
+            });
         });
     </script>
 </body>

@@ -181,26 +181,54 @@
         }
 
         .control-panel {
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 10px;
-            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 25px;
             margin: 20px 0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
         }
 
         .dark-theme .control-panel {
-            background: rgba(52, 73, 94, 0.8);
+            background: rgba(52, 73, 94, 0.9);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .control-panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
         }
 
         .control-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+            transition: all 0.3s ease;
+        }
+
+        .control-group:hover {
+            background: rgba(255, 255, 255, 0.7);
+            transform: translateX(5px);
+        }
+
+        .dark-theme .control-group {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .dark-theme .control-group:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .control-group label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
+            margin-bottom: 8px;
+            font-weight: 600;
             color: #2c3e50;
+            font-size: 14px;
         }
 
         .dark-theme .control-group label {
@@ -210,18 +238,206 @@
         .control-group select,
         .control-group input {
             width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
             background: white;
             color: #333;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .control-group select:focus,
+        .control-group input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
         }
 
         .dark-theme .control-group select,
         .dark-theme .control-group input {
-            background: #2c3e50;
-            border-color: #34495e;
+            background: #34495e;
+            border-color: #2c3e50;
             color: #ecf0f1;
+        }
+
+        .range-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .range-control input {
+            flex: 1;
+        }
+
+        .range-control span {
+            min-width: 60px;
+            text-align: center;
+            font-weight: 600;
+            color: #3498db;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #3498db;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+
+        .color-picker {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .color-picker input[type="color"] {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .color-picker input[type="color"]:hover {
+            border-color: #3498db;
+            transform: scale(1.1);
+        }
+
+        /* 新增的样式 */
+        .style-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .stats-panel {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .dark-theme .stats-panel {
+            background: rgba(52, 73, 94, 0.9);
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 10px;
+            border: 1px solid rgba(52, 152, 219, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+        }
+
+        .dark-theme .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+
+        .dark-theme .stat-value {
+            color: #ecf0f1;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .dark-theme .stat-label {
+            color: #bdc3c7;
+        }
+
+        .data-export {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+            background: linear-gradient(135deg, #2980b9, #1c6ea4);
         }
 
         .example-grid {
@@ -306,18 +522,79 @@
             <p>学习绘制基本折线图，掌握数据变化趋势的可视化方法。</p>
             
             <div class="control-panel">
-                <div class="control-group">
-                    <label for="lineType">折线图类型：</label>
-                    <select id="lineType" onchange="updateLineChart()">
-                        <option value="basic">基础折线图</option>
-                        <option value="multiple">多线图</option>
-                        <option value="trend">趋势分析</option>
-                    </select>
+                <div class="style-controls">
+                    <div class="control-group">
+                        <label for="lineType">📈 折线图类型</label>
+                        <select id="lineType" onchange="updateLineChart()">
+                            <option value="basic">基础折线图</option>
+                            <option value="multiple">多线图</option>
+                            <option value="trend">趋势分析</option>
+                            <option value="smooth">平滑曲线</option>
+                            <option value="step">阶梯图</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="animationSpeed">⚡ 动画速度</label>
+                        <div class="range-control">
+                            <input type="range" id="animationSpeed" min="0" max="2000" value="1000" onchange="updateLineChart()">
+                            <span id="speedValue">中等</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="dataPoints">🔢 数据点数量</label>
+                        <div class="range-control">
+                            <input type="range" id="dataPoints" min="10" max="100" value="50" onchange="updateLineChart()">
+                            <span id="pointsValue">50点</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="toggle-switch">
+                            <label>📏 显示网格</label>
+                            <label class="switch">
+                                <input type="checkbox" id="showGrid" checked onchange="updateLineChart()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
-                <div class="control-group">
-                    <label for="animationSpeed">动画速度：</label>
-                    <input type="range" id="animationSpeed" min="0" max="2000" value="1000" onchange="updateLineChart()">
-                    <span id="speedValue">中等</span>
+                
+                <div class="style-controls">
+                    <div class="control-group">
+                        <div class="color-picker">
+                            <label for="lineColor1">🎨 主色调</label>
+                            <input type="color" id="lineColor1" value="#4a90e2" onchange="updateLineChart()">
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="color-picker">
+                            <label for="lineColor2">🎨 辅色调</label>
+                            <input type="color" id="lineColor2" value="#2ecc71" onchange="updateLineChart()">
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="toggle-switch">
+                            <label>🔍 显示数据标签</label>
+                            <label class="switch">
+                                <input type="checkbox" id="showLabels" checked onchange="updateLineChart()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="toggle-switch">
+                            <label>📊 显示趋势线</label>
+                            <label class="switch">
+                                <input type="checkbox" id="showTrend" onchange="updateLineChart()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -338,21 +615,82 @@
             <p>掌握柱形图绘制技术，用于分类数据的比较和展示。</p>
             
             <div class="control-panel">
-                <div class="control-group">
-                    <label for="barType">柱形图类型：</label>
-                    <select id="barType" onchange="updateBarChart()">
-                        <option value="vertical">垂直柱形图</option>
-                        <option value="horizontal">横向柱形图</option>
-                        <option value="stacked">堆积柱形图</option>
-                    </select>
+                <div class="style-controls">
+                    <div class="control-group">
+                        <label for="barType">📊 柱形图类型</label>
+                        <select id="barType" onchange="updateBarChart()">
+                            <option value="vertical">垂直柱形图</option>
+                            <option value="horizontal">横向柱形图</option>
+                            <option value="stacked">堆积柱形图</option>
+                            <option value="grouped">分组柱形图</option>
+                            <option value="3d">3D柱形图</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="barWidth">📏 柱宽调节</label>
+                        <div class="range-control">
+                            <input type="range" id="barWidth" min="0.1" max="1" step="0.1" value="0.6" onchange="updateBarChart()">
+                            <span id="widthValue">0.6</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="toggle-switch">
+                            <label>🔍 显示数值</label>
+                            <label class="switch">
+                                <input type="checkbox" id="showValues" checked onchange="updateBarChart()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="toggle-switch">
+                            <label>🎯 平滑圆角</label>
+                            <label class="switch">
+                                <input type="checkbox" id="roundedCorners" onchange="updateBarChart()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
-                <div class="control-group">
-                    <label for="barColors">颜色方案：</label>
-                    <select id="barColors" onchange="updateBarChart()">
-                        <option value="default">默认颜色</option>
-                        <option value="gradient">渐变颜色</option>
-                        <option value="custom">自定义颜色</option>
-                    </select>
+                
+                <div class="style-controls">
+                    <div class="control-group">
+                        <label for="barColors">🎨 颜色方案</label>
+                        <select id="barColors" onchange="updateBarChart()">
+                            <option value="default">默认配色</option>
+                            <option value="gradient">渐变配色</option>
+                            <option value="rainbow">彩虹配色</option>
+                            <option value="monochrome">单色系</option>
+                            <option value="custom">自定义</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="color-picker">
+                            <label for="barColor1">🎨 主色调</label>
+                            <input type="color" id="barColor1" value="#3498db" onchange="updateBarChart()">
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="color-picker">
+                            <label for="barColor2">🎨 辅色调</label>
+                            <input type="color" id="barColor2" value="#2ecc71" onchange="updateBarChart()">
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="toggle-switch">
+                            <label>📐 显示网格</label>
+                            <label class="switch">
+                                <input type="checkbox" id="showGrid" checked onchange="updateBarChart()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -373,17 +711,78 @@
             <p>使用折线图展示未来15天最高气温和最低气温的变化趋势。</p>
             
             <div class="control-panel">
-                <div class="control-group">
-                    <label for="tempRange">温度范围：</label>
-                    <input type="range" id="tempRange" min="0" max="40" value="40" onchange="updateTempChart()">
-                    <span id="tempValue">0-40°C</span>
+                <div class="style-controls">
+                    <div class="control-group">
+                        <label for="tempRange">🌡️ 温度范围</label>
+                        <div class="range-control">
+                            <input type="range" id="tempRange" min="0" max="40" value="40" onchange="updateTempChart()">
+                            <span id="tempValue">0-40°C</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="smoothFactor">⚡ 平滑程度</label>
+                        <div class="range-control">
+                            <input type="range" id="smoothFactor" min="0" max="1" step="0.1" value="0.3" onchange="updateTempChart()">
+                            <span id="smoothValue">0.3</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="toggle-switch">
+                            <label>🔍 显示标记点</label>
+                            <label class="switch">
+                                <input type="checkbox" id="showMarkers" checked onchange="updateTempChart()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="toggle-switch">
+                            <label>📈 显示趋势线</label>
+                            <label class="switch">
+                                <input type="checkbox" id="showTrend" onchange="updateTempChart()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
-                <div class="control-group">
-                    <label for="showMarkers">显示标记点：</label>
-                    <select id="showMarkers" onchange="updateTempChart()">
-                        <option value="true">显示</option>
-                        <option value="false">隐藏</option>
-                    </select>
+                
+                <div class="style-controls">
+                    <div class="control-group">
+                        <div class="color-picker">
+                            <label for="tempColorHigh">🎨 高温颜色</label>
+                            <input type="color" id="tempColorHigh" value="#e74c3c" onchange="updateTempChart()">
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="color-picker">
+                            <label for="tempColorLow">🎨 低温颜色</label>
+                            <input type="color" id="tempColorLow" value="#3498db" onchange="updateTempChart()">
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="lineStyle">📐 线型样式</label>
+                        <select id="lineStyle" onchange="updateTempChart()">
+                            <option value="solid">实线</option>
+                            <option value="dashed">虚线</option>
+                            <option value="dotted">点线</option>
+                            <option value="dashdot">点划线</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="toggle-switch">
+                            <label>🌡️ 显示温差</label>
+                            <label class="switch">
+                                <input type="checkbox" id="showRange" checked onchange="updateTempChart()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -404,20 +803,82 @@
             <p>使用柱形图展示2019年内地电影票房排行榜数据。</p>
             
             <div class="control-panel">
-                <div class="control-group">
-                    <label for="movieSort">排序方式：</label>
-                    <select id="movieSort" onchange="updateMovieChart()">
-                        <option value="desc">票房降序</option>
-                        <option value="asc">票房升序</option>
-                        <option value="alphabet">字母顺序</option>
-                    </select>
+                <div class="style-controls">
+                    <div class="control-group">
+                        <label for="movieSort">🎬 排序方式</label>
+                        <select id="movieSort" onchange="updateMovieChart()">
+                            <option value="desc">票房降序</option>
+                            <option value="asc">票房升序</option>
+                            <option value="alphabet">字母顺序</option>
+                            <option value="rating">评分排序</option>
+                            <option value="duration">时长排序</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="movieCount">🎞️ 显示数量</label>
+                        <div class="range-control">
+                            <input type="range" id="movieCount" min="3" max="20" value="6" onchange="updateMovieChart()">
+                            <span id="countValue">6部</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="toggle-switch">
+                            <label>🔢 显示数值</label>
+                            <label class="switch">
+                                <input type="checkbox" id="showLabels" checked onchange="updateMovieChart()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="toggle-switch">
+                            <label>📊 显示占比</label>
+                            <label class="switch">
+                                <input type="checkbox" id="showPercentage" onchange="updateMovieChart()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
-                <div class="control-group">
-                    <label for="showLabels">显示数值标签：</label>
-                    <select id="showLabels" onchange="updateMovieChart()">
-                        <option value="true">显示</option>
-                        <option value="false">隐藏</option>
-                    </select>
+                
+                <div class="style-controls">
+                    <div class="control-group">
+                        <label for="chartStyle">📈 图表样式</label>
+                        <select id="chartStyle" onchange="updateMovieChart()">
+                            <option value="bar">柱形图</option>
+                            <option value="pie">饼图</option>
+                            <option value="donut">环形图</option>
+                            <option value="treemap">矩形树图</option>
+                            <option value="radial">径向图</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="color-picker">
+                            <label for="movieColor1">🎨 主色调</label>
+                            <input type="color" id="movieColor1" value="#e74c3c" onchange="updateMovieChart()">
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="color-picker">
+                            <label for="movieColor2">🎨 辅色调</label>
+                            <input type="color" id="movieColor2" value="#f39c12" onchange="updateMovieChart()">
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="toggle-switch">
+                            <label>✨ 3D效果</label>
+                            <label class="switch">
+                                <input type="checkbox" id="enable3D" onchange="updateMovieChart()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -438,28 +899,135 @@
             <p>实时交互式图表演示，体验动态数据可视化的魅力。</p>
             
             <div class="control-panel">
-                <div class="control-group">
-                    <label for="dataPoints">数据点数量：</label>
-                    <input type="range" id="dataPoints" min="5" max="50" value="20" onchange="updateInteractiveChart()">
-                    <span id="pointsValue">20个点</span>
+                <div class="style-controls">
+                    <div class="control-group">
+                        <label for="dataPoints">🎮 数据点数量</label>
+                        <div class="range-control">
+                            <input type="range" id="dataPoints" min="5" max="100" value="20" onchange="updateInteractiveChart()">
+                            <span id="pointsValue">20个点</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="chartStyle">📊 图表样式</label>
+                        <select id="chartStyle" onchange="updateInteractiveChart()">
+                            <option value="line">折线图</option>
+                            <option value="bar">柱形图</option>
+                            <option value="scatter">散点图</option>
+                            <option value="area">面积图</option>
+                            <option value="bubble">气泡图</option>
+                            <option value="radar">雷达图</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="updateSpeed">⚡ 更新速度</label>
+                        <div class="range-control">
+                            <input type="range" id="updateSpeed" min="100" max="5000" value="1000" onchange="updateInteractiveChart()">
+                            <span id="updateValue">1秒</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="toggle-switch">
+                            <label>🔄 实时更新</label>
+                            <label class="switch">
+                                <input type="checkbox" id="realtimeUpdate" checked onchange="updateInteractiveChart()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
-                <div class="control-group">
-                    <label for="chartStyle">图表样式：</label>
-                    <select id="chartStyle" onchange="updateInteractiveChart()">
-                        <option value="line">折线图</option>
-                        <option value="bar">柱形图</option>
-                        <option value="scatter">散点图</option>
-                    </select>
+                
+                <div class="style-controls">
+                    <div class="control-group">
+                        <div class="color-picker">
+                            <label for="interactiveColor1">🎨 主色调</label>
+                            <input type="color" id="interactiveColor1" value="#9b59b6" onchange="updateInteractiveChart()">
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="color-picker">
+                            <label for="interactiveColor2">🎨 辅色调</label>
+                            <input type="color" id="interactiveColor2" value="#e74c3c" onchange="updateInteractiveChart()">
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="dataType">📈 数据类型</label>
+                        <select id="dataType" onchange="updateInteractiveChart()">
+                            <option value="random">随机数据</option>
+                            <option value="trend">趋势数据</option>
+                            <option value="cycle">周期数据</option>
+                            <option value="real">真实数据</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="toggle-switch">
+                            <label>✨ 动画效果</label>
+                            <label class="switch">
+                                <input type="checkbox" id="enableAnimation" checked onchange="updateInteractiveChart()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
             
             <div class="chart-container" id="interactiveChart"></div>
             
+            <!-- 统计信息面板 -->
+            <div class="stats-panel">
+                <div class="stat-item">
+                    <div class="stat-value" id="dataCount">0</div>
+                    <div class="stat-label">数据点数量</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avgValue">0.00</div>
+                    <div class="stat-label">平均值</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="maxValue">0.00</div>
+                    <div class="stat-label">最大值</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="minValue">0.00</div>
+                    <div class="stat-label">最小值</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="trendValue">-</div>
+                    <div class="stat-label">趋势</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="lastUpdate">-</div>
+                    <div class="stat-label">最后更新</div>
+                </div>
+            </div>
+            
+            <div class="data-export">
+                <button class="export-btn" onclick="exportInteractiveData()">📊 导出数据</button>
+                <button class="export-btn" onclick="takeChartScreenshot()">📸 截图保存</button>
+                <button class="export-btn" onclick="resetInteractiveData()">🔄 重置数据</button>
+                <button class="export-btn" onclick="toggleFullscreen()">🔍 全屏查看</button>
+            </div>
+            
             <div class="example-grid">
                 <div class="example-card">
-                    <h3>实时数据生成</h3>
+                    <h3>🎯 实时数据监控</h3>
                     <div class="example-chart" id="realtimeChart"></div>
-                    <p>基于随机数据的实时动态图表</p>
+                    <p>基于随机数据的实时动态图表监控</p>
+                </div>
+                <div class="example-card">
+                    <h3>📈 趋势分析</h3>
+                    <div class="example-chart" id="trendChart"></div>
+                    <p>数据趋势变化和统计分析</p>
+                </div>
+                <div class="example-card">
+                    <h3>🔮 数据预测</h3>
+                    <div class="example-chart" id="predictionChart"></div>
+                    <p>基于历史数据的未来趋势预测</p>
                 </div>
             </div>
         </div>

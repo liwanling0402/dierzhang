@@ -86,6 +86,12 @@
             margin-bottom: 30px;
             border: 1px solid var(--bg-color-divider);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .control-panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
         
         .chart-type-selector {
@@ -130,6 +136,25 @@
             background: white;
         }
         
+        .interactive-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .control-group label {
+            font-weight: bold;
+            color: var(--text-color-dark);
+            font-size: 0.9em;
+        }
+        
         .animation-control {
             display: flex;
             align-items: center;
@@ -144,6 +169,81 @@
             flex: 1;
         }
         
+        .range-control {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .range-control input {
+            width: 100%;
+        }
+        
+        .color-picker {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .color-picker input[type="color"] {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--bg-color-divider);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
         .chart-container {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
@@ -151,6 +251,27 @@
             margin-bottom: 30px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
             height: 500px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chart-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .chart-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
         }
         
         .description {
@@ -158,6 +279,64 @@
             border-radius: 15px;
             padding: 20px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .description:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stats-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: var(--bg-color-light);
+            border-radius: 10px;
+            border: 1px solid var(--bg-color-divider);
+        }
+        
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: var(--text-color-light);
+        }
+        
+        .data-export {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .export-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        .export-btn:hover {
+            background: #c19b2e;
+            transform: translateY(-2px);
         }
         
         .description h3 {
@@ -278,25 +457,90 @@
                 <button class="chart-btn" onclick="switchChartType('radar')">产品性能雷达图</button>
             </div>
             
-            <div class="dataset-selector">
-                <select id="datasetSelect" onchange="updateChart()">
-                    <option value="trigonometry">三角函数数据</option>
-                    <option value="boxplot">零件质量分布数据</option>
-                    <option value="movie">2019年电影票房数据</option>
-                    <option value="scatter">随机分布数据</option>
-                    <option value="radar">产品性能数据</option>
-                </select>
-            </div>
-            
-            <div class="animation-control">
-                <label for="animationSpeed">动画速度:</label>
-                <input type="range" id="animationSpeed" min="0" max="2000" value="1000" onchange="updateAnimationSpeed()">
-                <span id="speedValue">中等</span>
+            <div class="interactive-controls">
+                <div class="control-group">
+                    <label for="datasetSelect">选择数据集</label>
+                    <select id="datasetSelect" onchange="updateChart()">
+                        <option value="trigonometry">三角函数数据</option>
+                        <option value="boxplot">零件质量分布数据</option>
+                        <option value="movie">2019年电影票房数据</option>
+                        <option value="scatter">随机分布数据</option>
+                        <option value="radar">产品性能数据</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="animationSpeed">动画速度调节</label>
+                    <div class="range-control">
+                        <input type="range" id="animationSpeed" min="0" max="2000" value="1000" onchange="updateAnimationSpeed()">
+                        <span id="speedValue">中等</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="dataPoints">数据点数量</label>
+                    <div class="range-control">
+                        <input type="range" id="dataPoints" min="10" max="200" value="100" onchange="updateDataPoints()">
+                        <span id="pointsValue">100点</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="toggle-switch">
+                        <label>显示网格线</label>
+                        <label class="switch">
+                            <input type="checkbox" id="showGrid" checked onchange="toggleGrid()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="toggle-switch">
+                        <label>显示数据标签</label>
+                        <label class="switch">
+                            <input type="checkbox" id="showLabels" checked onchange="toggleLabels()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="color-picker">
+                        <label for="chartColor">主色调</label>
+                        <input type="color" id="chartColor" value="#1E40AF" onchange="updateChartColors()">
+                    </div>
+                </div>
             </div>
         </div>
         
         <div class="chart-container">
             <canvas id="myChart"></canvas>
+        </div>
+        
+        <!-- 统计信息面板 -->
+        <div class="stats-panel">
+            <div class="stat-item">
+                <div class="stat-value" id="dataCount">0</div>
+                <div class="stat-label">数据点数量</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="avgValue">0</div>
+                <div class="stat-label">平均值</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="maxValue">0</div>
+                <div class="stat-label">最大值</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="minValue">0</div>
+                <div class="stat-label">最小值</div>
+            </div>
+        </div>
+        
+        <div class="data-export">
+            <button class="export-btn" onclick="exportData()">📊 导出数据为CSV</button>
+            <button class="export-btn" onclick="takeScreenshot()">📸 截图保存</button>
         </div>
         
         <div class="description">
