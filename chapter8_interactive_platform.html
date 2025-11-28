@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第8章 - 高级数据可视化交互平台</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            text-align: center;
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .chart-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .chart-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .chart-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+        }
+
+        .chart-description {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .chart-container {
+            height: 400px;
+            position: relative;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .controls {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .control-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 150px;
+        }
+
+        .control-item label {
+            font-weight: bold;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        .control-item select,
+        .control-item input {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+            background: white;
+        }
+
+        .control-item select:focus,
+        .control-item input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-panel h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .info-item h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .feature-item {
+            background: rgba(102, 126, 234, 0.05);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>第8章 高级数据可视化交互平台</h1>
+            <p>探索10种专业高级图表类型：等高线图、矢量场流线图、棉棒图、哑铃图、甘特图、人口金字塔图、漏斗图、桑基图、树状图、华夫饼图</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="info-panel">
+            <h3>📊 本章图表概览</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <h4>等高线图</h4>
+                    <p>显示三维数据的地形图，用于表示高度或密度分布</p>
+                </div>
+                <div class="info-item">
+                    <h4>矢量场流线图</h4>
+                    <p>展示向量场的流动模式和方向</p>
+                </div>
+                <div class="info-item">
+                    <h4>棉棒图</h4>
+                    <p>显示离散数据点及其误差范围</p>
+                </div>
+                <div class="info-item">
+                    <h4>哑铃图</h4>
+                    <p>比较两个数据点之间的变化或差异</p>
+                </div>
+                <div class="info-item">
+                    <h4>甘特图</h4>
+                    <p>项目管理中展示任务时间线和进度</p>
+                </div>
+                <div class="info-item">
+                    <h4>人口金字塔图</h4>
+                    <p>展示人口按年龄和性别的分布结构</p>
+                </div>
+                <div class="info-item">
+                    <h4>漏斗图</h4>
+                    <p>显示流程中各阶段的转化率变化</p>
+                </div>
+                <div class="info-item">
+                    <h4>桑基图</h4>
+                    <p>展示能量或资源的流动和分配</p>
+                </div>
+                <div class="info-item">
+                    <h4>树状图</h4>
+                    <p>展示层次结构和比例关系</p>
+                </div>
+                <div class="info-item">
+                    <h4>华夫饼图</h4>
+                    <p>以网格形式展示百分比构成</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <!-- 等高线图 -->
+            <div class="chart-card">
+                <h3 class="chart-title">🏔️ 等高线图</h3>
+                <p class="chart-description">展示三维数据的地形分布，高度值用等高线和颜色填充表示</p>
+                <div class="chart-container" id="contour-plot"></div>
+                <div class="controls">
+                    <div class="control-group">
+                        <div class="control-item">
+                            <label>等高线数量</label>
+                            <select id="contour-levels">
+                                <option value="8">8</option>
+                                <option value="12">12</option>
+                                <option value="16">16</option>
+                                <option value="20">20</option>
+                            </select>
+                        </div>
+                        <div class="control-item">
+                            <label>配色方案</label>
+                            <select id="contour-colorscheme">
+                                <option value="Viridis">Viridis</option>
+                                <option value="Plasma">Plasma</option>
+                                <option value="Hot">Hot</option>
+                                <option value="Cool">Cool</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="updateContourPlot()">更新图表</button>
+                </div>
+            </div>
+
+            <!-- 矢量场流线图 -->
+            <div class="chart-card">
+                <h3 class="chart-title">🌊 矢量场流线图</h3>
+                <p class="chart-description">显示向量场的流动模式和方向，流线表示流体的运动轨迹</p>
+                <div class="chart-container" id="stream-plot"></div>
+                <div class="controls">
+                    <div class="control-group">
+                        <div class="control-item">
+                            <label>流线密度</label>
+                            <select id="stream-density">
+                                <option value="low">低</option>
+                                <option value="medium" selected>中</option>
+                                <option value="high">高</option>
+                            </select>
+                        </div>
+                        <div class="control-item">
+                            <label>线条宽度</label>
+                            <select id="stream-width">
+                                <option value="1">细</option>
+                                <option value="2" selected>中</option>
+                                <option value="3">粗</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="updateStreamPlot()">更新图表</button>
+                </div>
+            </div>
+
+            <!-- 棉棒图 -->
+            <div class="chart-card">
+                <h3 class="chart-title">🌾 棉棒图</h3>
+                <p class="chart-description">显示离散数据点及其误差范围，常用于科学数据可视化</p>
+                <div class="chart-container" id="stem-plot"></div>
+                <div class="controls">
+                    <div class="control-group">
+                        <div class="control-item">
+                            <label>误差类型</label>
+                            <select id="stem-error-type">
+                                <option value="constant">固定误差</option>
+                                <option value="variable">可变误差</option>
+                                <option value="percentage">百分比误差</option>
+                            </select>
+                        </div>
+                        <div class="control-item">
+                            <label>数据点数量</label>
+                            <select id="stem-points">
+                                <option value="10">10</option>
+                                <option value="20" selected>20</option>
+                                <option value="30">30</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="updateStemPlot()">更新图表</button>
+                </div>
+            </div>
+
+            <!-- 哑铃图 -->
+            <div class="chart-card">
+                <h3 class="chart-title">🏋️ 哑铃图</h3>
+                <p class="chart-description">比较两个数据点之间的变化或差异，突出显示连接关系</p>
+                <div class="chart-container" id="dumbbell-plot"></div>
+                <div class="controls">
+                    <div class="control-group">
+                        <div class="control-item">
+                            <label>类别数量</label>
+                            <select id="dumbbell-categories">
+                                <option value="5">5</option>
+                                <option value="8" selected>8</option>
+                                <option value="12">12</option>
+                            </select>
+                        </div>
+                        <div class="control-item">
+                            <label>排序方式</label>
+                            <select id="dumbbell-sort">
+                                <option value="ascending">升序</option>
+                                <option value="descending">降序</option>
+                                <option value="difference">差值</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="updateDumbbellPlot()">更新图表</button>
+                </div>
+            </div>
+
+            <!-- 甘特图 -->
+            <div class="chart-card">
+                <h3 class="chart-title">📅 甘特图</h3>
+                <p class="chart-description">项目管理工具，显示任务时间线、依赖关系和进度</p>
+                <div class="chart-container" id="gantt-plot"></div>
+                <div class="controls">
+                    <div class="control-group">
+                        <div class="control-item">
+                            <label>任务数量</label>
+                            <select id="gantt-tasks">
+                                <option value="5">5</option>
+                                <option value="8" selected>8</option>
+                                <option value="12">12</option>
+                            </select>
+                        </div>
+                        <div class="control-item">
+                            <label>显示进度</label>
+                            <select id="gantt-progress">
+                                <option value="yes">显示</option>
+                                <option value="no">隐藏</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="updateGanttPlot()">更新图表</button>
+                </div>
+            </div>
+
+            <!-- 人口金字塔图 -->
+            <div class="chart-card">
+                <h3 class="chart-title">👥 人口金字塔图</h3>
+                <p class="chart-description">展示人口按年龄和性别的分布结构，反映人口发展趋势</p>
+                <div class="chart-container" id="pyramid-plot"></div>
+                <div class="controls">
+                    <div class="control-group">
+                        <div class="control-item">
+                            <label>年龄组数</label>
+                            <select id="pyramid-age-groups">
+                                <option value="6">6组</option>
+                                <option value="8" selected>8组</option>
+                                <option value="10">10组</option>
+                            </select>
+                        </div>
+                        <div class="control-item">
+                            <label>数据类型</label>
+                            <select id="pyramid-data-type">
+                                <option value="population">人口数量</option>
+                                <option value="percentage">百分比</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="updatePyramidPlot()">更新图表</button>
+                </div>
+            </div>
+
+            <!-- 漏斗图 -->
+            <div class="chart-card">
+                <h3 class="chart-title">🔽 漏斗图</h3>
+                <p class="chart-description">显示流程中各阶段的转化率变化，常用于销售和营销分析</p>
+                <div class="chart-container" id="funnel-plot"></div>
+                <div class="controls">
+                    <div class="control-group">
+                        <div class="control-item">
+                            <label>漏斗类型</label>
+                            <select id="funnel-type">
+                                <option value="sales">销售漏斗</option>
+                                <option value="marketing">营销漏斗</option>
+                                <option value="recruitment">招聘漏斗</option>
+                            </select>
+                        </div>
+                        <div class="control-item">
+                            <label>显示数值</label>
+                            <select id="funnel-values">
+                                <option value="yes">显示</option>
+                                <option value="no">隐藏</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="updateFunnelPlot()">更新图表</button>
+                </div>
+            </div>
+
+            <!-- 桑基图 -->
+            <div class="chart-card">
+                <h3 class="chart-title">🌊 桑基图</h3>
+                <p class="chart-description">展示能量或资源的流动和分配，适用于流量和转移分析</p>
+                <div class="chart-container" id="sankey-plot"></div>
+                <div class="controls">
+                    <div class="control-group">
+                        <div class="control-item">
+                            <label>节点数量</label>
+                            <select id="sankey-nodes">
+                                <option value="4">4个节点</option>
+                                <option value="5" selected>5个节点</option>
+                                <option value="6">6个节点</option>
+                            </select>
+                        </div>
+                        <div class="control-item">
+                            <label>流向数量</label>
+                            <select id="sankey-flows">
+                                <option value="simple">简单</option>
+                                <option value="medium" selected>中等</option>
+                                <option value="complex">复杂</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="updateSankeyPlot()">更新图表</button>
+                </div>
+            </div>
+
+            <!-- 树状图 -->
+            <div class="chart-card">
+                <h3 class="chart-title">🌳 树状图</h3>
+                <p class="chart-description">展示层次结构和比例关系，适用于组织架构和数据分解</p>
+                <div class="chart-container" id="treemap-plot"></div>
+                <div class="controls">
+                    <div class="control-group">
+                        <div class="control-item">
+                            <label>层级深度</label>
+                            <select id="treemap-depth">
+                                <option value="2">2层</option>
+                                <option value="3" selected>3层</option>
+                                <option value="4">4层</option>
+                            </select>
+                        </div>
+                        <div class="control-item">
+                            <label>数据类型</label>
+                            <select id="treemap-data">
+                                <option value="budget">预算分配</option>
+                                <option value="sales">销售数据</option>
+                                <option value="population">人口分布</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="updateTreemapPlot()">更新图表</button>
+                </div>
+            </div>
+
+            <!-- 华夫饼图 -->
+            <div class="chart-card">
+                <h3 class="chart-title">🧇 华夫饼图</h3>
+                <p class="chart-description">以网格形式展示百分比构成，适合显示完成度或占比</p>
+                <div class="chart-container" id="waffle-plot"></div>
+                <div class="controls">
+                    <div class="control-group">
+                        <div class="control-item">
+                            <label>网格大小</label>
+                            <select id="waffle-size">
+                                <option value="10x10">10×10</option>
+                                <option value="12x12" selected>12×12</option>
+                                <option value="15x15">15×15</option>
+                            </select>
+                        </div>
+                        <div class="control-item">
+                            <label>分类数量</label>
+                            <select id="waffle-categories">
+                                <option value="3">3类</option>
+                                <option value="4" selected>4类</option>
+                                <option value="5">5类</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="updateWafflePlot()">更新图表</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <h3>🎯 平台特色功能</h3>
+            <div class="feature-list">
+                <div class="feature-item">实时交互式图表</div>
+                <div class="feature-item">参数自定义调节</div>
+                <div class="feature-item">响应式布局设计</div>
+                <div class="feature-item">平滑动画过渡</div>
+                <div class="feature-item">数据导出功能</div>
+                <div class="feature-item">图表缩放平移</div>
+                <div class="feature-item">多主题配色</div>
+                <div class="feature-item">数据统计显示</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量存储图表实例
+        let charts = {};
+
+        // 页面加载完成后初始化所有图表
+        document.addEventListener('DOMContentLoaded', function() {
+            initAllCharts();
+        });
+
+        // 初始化所有图表
+        function initAllCharts() {
+            updateContourPlot();
+            updateStreamPlot();
+            updateStemPlot();
+            updateDumbbellPlot();
+            updateGanttPlot();
+            updatePyramidPlot();
+            updateFunnelPlot();
+            updateSankeyPlot();
+            updateTreemapPlot();
+            updateWafflePlot();
+        }
+
+        // 等高线图
+        function updateContourPlot() {
+            const levels = parseInt(document.getElementById('contour-levels').value);
+            const colorscheme = document.getElementById('contour-colorscheme').value;
+            
+            // 生成数据
+            const size = 100;
+            const x = [];
+            const y = [];
+            const z = [];
+            
+            for (let i = 0; i < size; i++) {
+                x[i] = -2 + 4 * i / size;
+                y[i] = -2 + 4 * i / size;
+                z[i] = [];
+                for (let j = 0; j < size; j++) {
+                    const xi = -2 + 4 * i / size;
+                    const yi = -2 + 4 * j / size;
+                    z[i][j] = (1 - xi/2 + xi**5 + yi**3) * Math.exp(-xi**2 - yi**2);
+                }
+            }
+            
+            const data = [{
+                x: x,
+                y: y,
+                z: z,
+                type: 'contour',
+                colorscale: colorscheme,
+                contours: {
+                    coloring: 'heatmap'
+                },
+                ncontours: levels,
+                colorbar: {
+                    title: '高度值'
+                }
+            }];
+            
+            const layout = {
+                title: '三维等高线图',
+                xaxis: { title: 'X轴' },
+                yaxis: { title: 'Y轴' },
+                margin: { t: 30, r: 30, b: 40, l: 40 }
+            };
+            
+            Plotly.newPlot('contour-plot', data, layout, {responsive: true});
+        }
+
+        // 矢量场流线图
+        function updateStreamPlot() {
+            const density = document.getElementById('stream-density').value;
+            const width = parseInt(document.getElementById('stream-width').value);
+            
+            // 生成矢量场数据
+            const size = density === 'low' ? 15 : density === 'medium' ? 20 : 30;
+            const x = [];
+            const y = [];
+            const u = [];
+            const v = [];
+            
+            for (let i = 0; i < size; i++) {
+                x[i] = [];
+                y[i] = [];
+                u[i] = [];
+                v[i] = [];
+                for (let j = 0; j < size; j++) {
+                    const xi = -2 + 4 * i / size;
+                    const yi = -2 + 4 * j / size;
+                    x[i][j] = xi;
+                    y[i][j] = yi;
+                    u[i][j] = xi * Math.cos(xi + yi);
+                    v[i][j] = yi * Math.sin(xi + yi);
+                }
+            }
+            
+            const data = [{
+                type: 'stream',
+                x: x,
+                y: y,
+                u: u,
+                v: v,
+                color: 'blue',
+                linewidth: width,
+                density: density === 'low' ? 0.8 : density === 'medium' ? 1.0 : 1.2
+            }];
+            
+            const layout = {
+                title: '矢量场流线图',
+                xaxis: { title: 'X轴' },
+                yaxis: { title: 'Y轴' },
+                margin: { t: 30, r: 30, b: 40, l: 40 }
+            };
+            
+            Plotly.newPlot('stream-plot', data, layout, {responsive: true});
+        }
+
+        // 棉棒图
+        function updateStemPlot() {
+            const errorType = document.getElementById('stem-error-type').value;
+            const numPoints = parseInt(document.getElementById('stem-points').value);
+            
+            const x = [];
+            const y = [];
+            const error = [];
+            
+            for (let i = 0; i < numPoints; i++) {
+                x.push(i + 1);
+                const baseValue = Math.sin(i * 0.5) * 10 + 15;
+                y.push(baseValue);
+                
+                if (errorType === 'constant') {
+                    error.push(2);
+                } else if (errorType === 'variable') {
+                    error.push(Math.random() * 3 + 0.5);
+                } else {
+                    error.push(baseValue * 0.1);
+                }
+            }
+            
+            const data = [{
+                type: 'scatter',
+                x: x,
+                y: y,
+                mode: 'markers',
+                error_y: {
+                    type: 'data',
+                    array: error,
+                    visible: true,
+                    color: 'rgba(100, 126, 234, 0.5)',
+                    thickness: 2
+                },
+                marker: {
+                    color: 'rgba(102, 126, 234, 0.8)',
+                    size: 8,
+                    line: { color: 'white', width: 1 }
+                },
+                line: { color: 'rgba(102, 126, 234, 0.6)', width: 2 }
+            }];
+            
+            const layout = {
+                title: '棉棒图',
+                xaxis: { title: '数据点' },
+                yaxis: { title: '数值' },
+                margin: { t: 30, r: 30, b: 40, l: 40 }
+            };
+            
+            Plotly.newPlot('stem-plot', data, layout, {responsive: true});
+        }
+
+        // 哑铃图
+        function updateDumbbellPlot() {
+            const numCategories = parseInt(document.getElementById('dumbbell-categories').value);
+            const sortBy = document.getElementById('dumbbell-sort').value;
+            
+            const categories = [];
+            const group1 = [];
+            const group2 = [];
+            
+            for (let i = 0; i < numCategories; i++) {
+                categories.push(`类别 ${i + 1}`);
+                group1.push(Math.random() * 50 + 30);
+                group2.push(Math.random() * 50 + 30);
+            }
+            
+            // 排序
+            if (sortBy === 'ascending') {
+                const indices = Array.from(Array(numCategories).keys());
+                indices.sort((a, b) => group1[a] - group1[b]);
+                indices.forEach((idx, i) => {
+                    categories[i] = `类别 ${idx + 1}`;
+                    group1[i] = group1[idx];
+                    group2[i] = group2[idx];
+                });
+            } else if (sortBy === 'descending') {
+                const indices = Array.from(Array(numCategories).keys());
+                indices.sort((a, b) => group1[b] - group1[a]);
+                indices.forEach((idx, i) => {
+                    categories[i] = `类别 ${idx + 1}`;
+                    group1[i] = group1[idx];
+                    group2[i] = group2[idx];
+                });
+            } else if (sortBy === 'difference') {
+                const differences = group1.map((v, i) => v - group2[i]);
+                const indices = Array.from(Array(numCategories).keys());
+                indices.sort((a, b) => Math.abs(differences[b]) - Math.abs(differences[a]));
+                indices.forEach((idx, i) => {
+                    categories[i] = `类别 ${idx + 1}`;
+                    group1[i] = group1[idx];
+                    group2[i] = group2[idx];
+                });
+            }
+            
+            const trace1 = {
+                y: categories,
+                x: group1,
+                type: 'scatter',
+                mode: 'markers',
+                name: '组别 A',
+                marker: { color: 'rgba(102, 126, 234, 0.8)', size: 10 }
+            };
+            
+            const trace2 = {
+                y: categories,
+                x: group2,
+                type: 'scatter',
+                mode: 'markers',
+                name: '组别 B',
+                marker: { color: 'rgba(118, 75, 162, 0.8)', size: 10 }
+            };
+            
+            // 添加连接线
+            const connectionTraces = [];
+            for (let i = 0; i < numCategories; i++) {
+                connectionTraces.push({
+                    x: [group1[i], group2[i]],
+                    y: [categories[i], categories[i]],
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { color: 'rgba(150, 150, 150, 0.3)', width: 2 },
+                    showlegend: false,
+                    hoverinfo: 'none'
+                });
+            }
+            
+            const data = [trace1, trace2, ...connectionTraces];
+            
+            const layout = {
+                title: '哑铃图',
+                xaxis: { title: '数值' },
+                yaxis: { title: '类别' },
+                margin: { t: 30, r: 30, b: 40, l: 60 },
+                height: 400
+            };
+            
+            Plotly.newPlot('dumbbell-plot', data, layout, {responsive: true});
+        }
+
+        // 甘特图
+        function updateGanttPlot() {
+            const numTasks = parseInt(document.getElementById('gantt-tasks').value);
+            const showProgress = document.getElementById('gantt-progress').value === 'yes';
+            
+            const tasks = [];
+            const startDates = [];
+            const endDates = [];
+            const progress = [];
+            
+            const startDate = new Date('2024-01-01');
+            
+            for (let i = 0; i < numTasks; i++) {
+                tasks.push(`任务 ${i + 1}`);
+                const start = new Date(startDate.getTime() + Math.random() * 30 * 24 * 60 * 60 * 1000);
+                const duration = Math.random() * 20 + 5; // 5-25 days
+                const end = new Date(start.getTime() + duration * 24 * 60 * 60 * 1000);
+                
+                startDates.push(start);
+                endDates.push(end);
+                progress.push(Math.random() * 100);
+            }
+            
+            const data = [{
+                x: startDates.map((date, i) => [date, endDates[i]]),
+                y: tasks,
+                type: 'scatter',
+                mode: 'markers',
+                marker: {
+                    symbol: 'square',
+                    size: 40,
+                    color: progress.map(p => p / 100),
+                    colorscale: 'RdYlGn',
+                    colorbar: {
+                        title: '完成度',
+                        x: 1.02
+                    }
+                },
+                text: progress.map(p => `${p.toFixed(1)}%`),
+                hovertemplate: '任务: %{y}<br>开始: %{x[0]}<br>结束: %{x[1]}<br>进度: %{text}<extra></extra>'
+            }];
+            
+            const layout = {
+                title: '甘特图',
+                xaxis: { title: '日期' },
+                yaxis: { title: '任务' },
+                margin: { t: 30, r: 100, b: 40, l: 60 },
+                height: 400
+            };
+            
+            Plotly.newPlot('gantt-plot', data, layout, {responsive: true});
+        }
+
+        // 人口金字塔图
+        function updatePyramidPlot() {
+            const ageGroups = parseInt(document.getElementById('pyramid-age-groups').value);
+            const dataType = document.getElementById('pyramid-data-type').value === 'percentage';
+            
+            const ages = [];
+            const male = [];
+            const female = [];
+            
+            const maxAge = 80;
+            const ageStep = maxAge / ageGroups;
+            
+            for (let i = 0; i < ageGroups; i++) {
+                const ageStart = i * ageStep;
+                const ageEnd = (i + 1) * ageStep;
+                ages.push(`${ageStart.toFixed(0)}-${ageEnd.toFixed(0)}岁`);
+                
+                const baseMale = 100000 * Math.exp(-i * 0.3);
+                const baseFemale = 110000 * Math.exp(-i * 0.28);
+                
+                male.push(-(baseMale + Math.random() * 20000 - 10000));
+                female.push(baseFemale + Math.random() * 20000 - 10000);
+            }
+            
+            if (dataType) {
+                const totalMale = male.reduce((a, b) => a + Math.abs(b), 0);
+                const totalFemale = female.reduce((a, b) => a + Math.abs(b), 0);
+                male = male.map(v => (v / totalMale * 100).toFixed(1));
+                female = female.map(v => (v / totalFemale * 100).toFixed(1));
+            }
+            
+            const trace1 = {
+                x: male,
+                y: ages,
+                type: 'bar',
+                orientation: 'h',
+                name: '男性',
+                marker: { color: 'rgba(102, 126, 234, 0.8)' }
+            };
+            
+            const trace2 = {
+                x: female,
+                y: ages,
+                type: 'bar',
+                orientation: 'h',
+                name: '女性',
+                marker: { color: 'rgba(118, 75, 162, 0.8)' }
+            };
+            
+            const data = [trace1, trace2];
+            
+            const layout = {
+                title: '人口金字塔图',
+                xaxis: { 
+                    title: dataType ? '百分比 (%)' : '人口数量',
+                    range: dataType ? [-15, 15] : [-120000, 120000]
+                },
+                yaxis: { title: '年龄组' },
+                barmode: 'overlay',
+                bargap: 0.1,
+                margin: { t: 30, r: 30, b: 40, l: 60 },
+                legend: { x: 0.5, y: -0.2, orientation: 'h' }
+            };
+            
+            Plotly.newPlot('pyramid-plot', data, layout, {responsive: true});
+        }
+
+        // 漏斗图
+        function updateFunnelPlot() {
+            const funnelType = document.getElementById('funnel-type').value;
+            const showValues = document.getElementById('funnel-values').value === 'yes';
+            
+            let stages, values, colors;
+            
+            switch (funnelType) {
+                case 'sales':
+                    stages = ['潜在客户', '意向客户', '商机', '报价', '成交'];
+                    values = [1000, 600, 300, 150, 50];
+                    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd'];
+                    break;
+                case 'marketing':
+                    stages = ['曝光', '点击', '访问', '注册', '转化'];
+                    values = [10000, 3000, 1500, 500, 100];
+                    colors = ['#ff7f0e', '#1f77b4', '#2ca02c', '#d62728', '#9467bd'];
+                    break;
+                case 'recruitment':
+                    stages = ['简历投递', '筛选', '初试', '复试', '录用'];
+                    values = [500, 200, 100, 40, 20];
+                    colors = ['#2ca02c', '#1f77b4', '#ff7f0e', '#d62728', '#9467bd'];
+                    break;
+            }
+            
+            const data = [{
+                type: 'funnel',
+                y: stages,
+                x: values,
+                text: showValues ? values.map(v => v.toLocaleString()) : undefined,
+                textposition: showValues ? 'inside' : 'none',
+                textinfo: showValues ? 'text+percent initial+percent previous' : 'percent initial',
+                marker: { color: colors },
+                hovertemplate: '阶段: %{y}<br>数量: %{x}<br>转化率: %{percentInitial}<extra></extra>'
+            }];
+            
+            const layout = {
+                title: '漏斗图',
+                margin: { t: 30, r: 30, b: 40, l: 60 }
+            };
+            
+            Plotly.newPlot('funnel-plot', data, layout, {responsive: true});
+        }
+
+        // 桑基图
+        function updateSankeyPlot() {
+            const numNodes = parseInt(document.getElementById('sankey-nodes').value);
+            const flowComplexity = document.getElementById('sankey-flows').value;
+            
+            const nodes = [];
+            const links = [];
+            
+            // 创建节点
+            for (let i = 0; i < numNodes; i++) {
+                nodes.push({
+                    label: ['源A', '源B', '源C', '中转1', '中转2', '目标1', '目标2', '目标3'][i] || `节点${i+1}`,
+                    color: ['rgba(31, 119, 180, 0.8)', 'rgba(255, 127, 14, 0.8)', 'rgba(44, 160, 44, 0.8)', 
+                           'rgba(214, 39, 40, 0.8)', 'rgba(148, 103, 189, 0.8)', 'rgba(140, 86, 75, 0.8)'][i % 7]
+                });
+            }
+            
+            // 创建连接
+            const numFlows = flowComplexity === 'simple' ? 3 : flowComplexity === 'medium' ? 5 : 8;
+            
+            for (let i = 0; i < numFlows; i++) {
+                const source = Math.floor(Math.random() * Math.floor(numNodes / 2));
+                const target = Math.floor(Math.random() * Math.floor(numNodes / 2)) + Math.floor(numNodes / 2);
+                
+                if (source !== target) {
+                    links.push({
+                        source: source,
+                        target: target,
+                        value: Math.random() * 30 + 10,
+                        color: 'rgba(100, 100, 100, 0.5)'
+                    });
+                }
+            }
+            
+            const data = [{
+                type: 'sankey',
+                domain: { x: [0, 1], y: [0, 1] },
+                orientation: 'h',
+                node: {
+                    pad: 15,
+                    thickness: 20,
+                    line: { color: 'black', width: 0.5 },
+                    label: nodes.map(n => n.label),
+                    color: nodes.map(n => n.color)
+                },
+                link: {
+                    source: links.map(l => l.source),
+                    target: links.map(l => l.target),
+                    value: links.map(l => l.value),
+                    color: links.map(l => l.color)
+                }
+            }];
+            
+            const layout = {
+                title: '桑基图',
+                margin: { t: 30, r: 30, b: 40, l: 40 }
+            };
+            
+            Plotly.newPlot('sankey-plot', data, layout, {responsive: true});
+        }
+
+        // 树状图
+        function updateTreemapPlot() {
+            const depth = parseInt(document.getElementById('treemap-depth').value);
+            const dataType = document.getElementById('treemap-data').value;
+            
+            let data;
+            
+            switch (dataType) {
+                case 'budget':
+                    data = [{
+                        type: 'treemap',
+                        labels: ['总预算', '研发部门', '市场部门', '运营部门', '人事部门', '财务部门'],
+                        parents: ['', '总预算', '总预算', '总预算', '总预算', '总预算'],
+                        values: [100, 35, 25, 20, 10, 10],
+                        textinfo: 'label+value+percent parent',
+                        marker: { colorscale: 'Blues' }
+                    }];
+                    break;
+                case 'sales':
+                    data = [{
+                        type: 'treemap',
+                        labels: ['总销售', '北区', '南区', '东区', '西区', '线上', '线下', '北京', '上海', '广州', '深圳'],
+                        parents: ['', '总销售', '总销售', '总销售', '总销售', '总销售', '总销售', '北区', '南区', '南区', '南区'],
+                        values: [100, 30, 25, 20, 15, 60, 40, 15, 10, 8, 7],
+                        textinfo: 'label+value+percent parent',
+                        marker: { colorscale: 'Greens' }
+                    }];
+                    break;
+                case 'population':
+                    data = [{
+                        type: 'treemap',
+                        labels: ['总人口', '城市', '农村', '东部', '中部', '西部', '北京', '上海', '县城', '乡镇', '山区'],
+                        parents: ['', '总人口', '总人口', '城市', '城市', '农村', '东部', '东部', '农村', '农村', '农村'],
+                        values: [100, 60, 40, 35, 15, 10, 20, 15, 20, 12, 8],
+                        textinfo: 'label+value+percent parent',
+                        marker: { colorscale: 'Reds' }
+                    }];
+                    break;
+            }
+            
+            const layout = {
+                title: '树状图',
+                margin: { t: 30, r: 30, b: 40, l: 40 }
+            };
+            
+            Plotly.newPlot('treemap-plot', data, layout, {responsive: true});
+        }
+
+        // 华夫饼图
+        function updateWafflePlot() {
+            const sizeSelect = document.getElementById('waffle-size').value;
+            const categories = parseInt(document.getElementById('waffle-categories').value);
+            
+            const [rows, cols] = sizeSelect.split('x').map(Number);
+            const totalCells = rows * cols;
+            
+            const categoryColors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd'];
+            const categoryNames = ['类别1', '类别2', '类别3', '类别4', '类别5'];
+            const categoryValues = [];
+            
+            // 生成随机比例
+            let remaining = 100;
+            for (let i = 0; i < categories - 1; i++) {
+                const value = Math.random() * (remaining / (categories - i));
+                categoryValues.push(value);
+                remaining -= value;
+            }
+            categoryValues.push(remaining);
+            
+            const data = [];
+            let currentCell = 0;
+            
+            for (let i = 0; i < categories; i++) {
+                const cellCount = Math.round(categoryValues[i] / 100 * totalCells);
+                const row = [];
+                const col = [];
+                const text = [];
+                
+                for (let j = 0; j < cellCount && currentCell < totalCells; j++) {
+                    row.push(Math.floor(currentCell / cols));
+                    col.push(currentCell % cols);
+                    text.push('');
+                    currentCell++;
+                }
+                
+                if (row.length > 0) {
+                    data.push({
+                        type: 'scatter',
+                        x: col,
+                        y: row,
+                        mode: 'markers',
+                        marker: {
+                            symbol: 'square',
+                            size: 20,
+                            color: categoryColors[i]
+                        },
+                        name: `${categoryNames[i]} (${categoryValues[i].toFixed(1)}%)`,
+                        text: text,
+                        hovertemplate: `${categoryNames[i]}<br>占比: ${categoryValues[i].toFixed(1)}%<extra></extra>`
+                    });
+                }
+            }
+            
+            const layout = {
+                title: '华夫饼图',
+                xaxis: { 
+                    range: [-0.5, cols - 0.5],
+                    tickvals: Array.from({length: cols}, (_, i) => i),
+                    gridcolor: 'lightgray'
+                },
+                yaxis: { 
+                    range: [-0.5, rows - 0.5],
+                    tickvals: Array.from({length: rows}, (_, i) => i),
+                    gridcolor: 'lightgray'
+                },
+                showlegend: true,
+                margin: { t: 30, r: 150, b: 40, l: 40 },
+                legend: { 
+                    orientation: 'v',
+                    x: 1.02,
+                    y: 0.5
+                }
+            };
+            
+            Plotly.newPlot('waffle-plot', data, layout, {responsive: true});
+        }
+    </script>
+</body>
+</html>
